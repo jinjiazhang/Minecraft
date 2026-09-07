@@ -38,7 +38,7 @@ function openMenu(player: Player): void {
     .title("Lodestone")
     .body("选一种玩法，或开始解谜寻宝。\n聊天输入 §e!menu§r 可再次打开。");
 
-  form.button("解谜寻宝\n§7失落的磁石，跟着线索找宝藏");
+  form.button("彩虹寻宝园\n§7算术题和找钥匙，适合小朋友");
   for (const mode of MODES) {
     form.button(`${mode.title}\n§7${mode.summary}`);
   }
