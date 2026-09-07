@@ -2,9 +2,9 @@
   "format_version": 2,
   "header": {
     "name": "Lodestone",
-    "description": "进服选玩法的大厅菜单",
+    "description": "玩法菜单与失落的磁石寻宝",
     "uuid": "e6dbce40-9abb-4353-a632-cbde68a206d0",
-    "version": [1, 0, 0],
+    "version": [1, 1, 1],
     "min_engine_version": [1, 21, 0]
   },
   "modules": [

@@ -6,6 +6,7 @@ HOST="${LODESTONE_HOST:-ubuntu@jinjiazh.com}"
 
 npm --prefix "$ROOT" run build
 
+ssh "$HOST" "rm -rf /tmp/lodestone-pack /tmp/lodestone-world_behavior_packs.json"
 scp -r "$ROOT/pack" "$HOST:/tmp/lodestone-pack"
 scp "$ROOT/world_behavior_packs.json" "$HOST:/tmp/lodestone-world_behavior_packs.json"
 
