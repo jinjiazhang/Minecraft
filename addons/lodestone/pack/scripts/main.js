@@ -1,28 +1,30 @@
-import { Player, system, world } from "@minecraft/server";
+import { ItemLockMode, ItemStack, Player, system, world } from "@minecraft/server";
 import { onJoin } from "./game";
 import { openMenu } from "./menu";
 const OPEN_CHAT = new Set(["!menu", "!lodestone", "!hunt", "菜单", "寻宝"]);
-const COMPASS = "minecraft:compass";
-function giveCompass(player) {
+const MENU_ITEM = "minecraft:compass";
+const MENU_NAME = "菜单";
+const MENU_SLOT = 8;
+function giveMenuItem(player) {
     const inventory = player.getComponent("minecraft:inventory");
     const box = inventory?.container;
     if (!box) {
         return;
     }
-    for (let slot = 0; slot < box.size; slot++) {
-        if (box.getItem(slot)?.typeId === COMPASS) {
-            return;
-        }
-    }
-    player.runCommand("give @s compass 1");
-    player.sendMessage("§7指南针可以打开菜单。");
+    const item = new ItemStack(MENU_ITEM, 1);
+    item.nameTag = MENU_NAME;
+    item.keepOnDeath = true;
+    item.lockMode = ItemLockMode.slot;
+    box.setItem(MENU_SLOT, item);
+    player.selectedSlotIndex = MENU_SLOT;
+    player.sendMessage("§7点快捷栏最右边的「菜单」就能打开。");
 }
 world.afterEvents.playerSpawn.subscribe((event) => {
     if (!event.initialSpawn) {
         return;
     }
     const player = event.player;
-    system.run(() => giveCompass(player));
+    system.run(() => giveMenuItem(player));
     system.runTimeout(() => {
         if (player.isValid) {
             onJoin(player);
@@ -31,7 +33,11 @@ world.afterEvents.playerSpawn.subscribe((event) => {
     }, 50);
 });
 world.beforeEvents.itemUse.subscribe((event) => {
-    if (event.itemStack.typeId !== COMPASS || !(event.source instanceof Player)) {
+    if (!(event.source instanceof Player)) {
+        return;
+    }
+    const item = event.itemStack;
+    if (item.typeId !== MENU_ITEM && item.nameTag !== MENU_NAME) {
         return;
     }
     event.cancel = true;

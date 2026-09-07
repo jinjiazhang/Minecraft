@@ -1,0 +1,12 @@
+[Unit]
+Description=Wipe Bedrock world when Lodestone requests it
+After=bedrock.service
+
+[Service]
+Type=simple
+ExecStart=/opt/bedrock/wipe-watch.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

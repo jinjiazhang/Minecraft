@@ -19,6 +19,10 @@ export function setCourse(next) {
     course = next;
     return next;
 }
+export function clearCourse() {
+    course = undefined;
+    sessions.clear();
+}
 export function createState() {
     return {
         tokens: [],

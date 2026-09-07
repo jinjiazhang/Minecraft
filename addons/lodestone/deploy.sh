@@ -13,8 +13,9 @@ scp "$ROOT/world_behavior_packs.json" "$HOST:/tmp/lodestone-world_behavior_packs
 ssh "$HOST" 'set -e
 sudo rm -rf /opt/bedrock/behavior_packs/lodestone
 sudo cp -a /tmp/lodestone-pack /opt/bedrock/behavior_packs/lodestone
+sudo cp /tmp/lodestone-world_behavior_packs.json /opt/bedrock/world_behavior_packs.json
 sudo cp /tmp/lodestone-world_behavior_packs.json /opt/bedrock/worlds/world/world_behavior_packs.json
-sudo chown -R minecraft:minecraft /opt/bedrock/behavior_packs/lodestone /opt/bedrock/worlds/world/world_behavior_packs.json
+sudo chown -R minecraft:minecraft /opt/bedrock/behavior_packs/lodestone /opt/bedrock/world_behavior_packs.json /opt/bedrock/worlds/world/world_behavior_packs.json
 sudo systemctl restart bedrock.service
 '
 echo "Lodestone deployed. Restarting BDS..."

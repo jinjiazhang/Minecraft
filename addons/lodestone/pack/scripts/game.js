@@ -1,7 +1,7 @@
 import { system, world } from "@minecraft/server";
 import { asVector, buildCandyPort } from "./park";
 import { tickPuzzles } from "./puzzles";
-import { course, createState, missingTokens, sessions, setCourse } from "./state";
+import { clearCourse, course, createState, missingTokens, sessions, setCourse } from "./state";
 import { tryOpenTower } from "./tower";
 export function tellStory(player) {
     player.sendMessage("§d果冻精灵被锁在彩虹塔顶。");
@@ -26,6 +26,27 @@ export function startGame(player) {
     player.teleport(asVector(built.hub));
     player.sendMessage("§d—— 彩虹糖果港 ——");
     tellStory(player);
+}
+export function resumeGame(player) {
+    if (!sessions.has(player.id)) {
+        startGame(player);
+        return;
+    }
+    if (course) {
+        player.teleport(asVector(course.hub));
+    }
+    remind(player);
+}
+export function wipeWorld(player) {
+    player.sendMessage("§e正在删除存档并生成新世界，请重新进服。");
+    console.warn("LODESTONE_WIPE_WORLD");
+    clearCourse();
+    try {
+        player.runCommand("kick @a 世界正在重新生成，请重新进服");
+    }
+    catch {
+        // 服务端清档时会把人踢掉
+    }
 }
 export function onJoin(player) {
     if (course) {

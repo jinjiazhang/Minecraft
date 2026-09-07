@@ -42,6 +42,11 @@ export function setCourse(next: Course): Course {
   return next;
 }
 
+export function clearCourse(): void {
+  course = undefined;
+  sessions.clear();
+}
+
 export function createState(): HuntState {
   return {
     tokens: [],

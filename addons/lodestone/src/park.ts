@@ -109,7 +109,7 @@ export function buildCandyPort(player: Player, existing?: Course): Course {
   fill(player, cx - 2, y, cz - 15, cx + 2, y + 8, cz - 9, "minecraft:air");
   fill(player, cx - 1, y, cz - 8, cx + 1, y + 2, cz - 8, "minecraft:iron_bars");
   put(player, cx, y + 10, cz - 12, "minecraft:lantern");
-  put(player, cx, y + 9, cz - 12, "minecraft:slime_block");
+  put(player, cx, y + 9, cz - 12, "minecraft:slime");
 
   road(player, cx - 1, cz + 7, cx + 1, cz + 16, y, "minecraft:magenta_concrete");
   house(player, cx, y, cz + 21, 5, 4, "minecraft:magenta_concrete", "minecraft:magenta_concrete", "north");

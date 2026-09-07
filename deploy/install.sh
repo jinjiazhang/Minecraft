@@ -34,6 +34,8 @@ chmod +x "$ROOT/bedrock_server"
 
 install -m 0755 "$DEPLOY_DIR/start.sh" "$ROOT/start.sh"
 install -m 0755 "$DEPLOY_DIR/cmd.sh" "$ROOT/cmd.sh"
+install -m 0755 "$DEPLOY_DIR/wipe-world.sh" "$ROOT/wipe-world.sh"
+install -m 0755 "$DEPLOY_DIR/wipe-watch.sh" "$ROOT/wipe-watch.sh"
 install -m 0644 "$DEPLOY_DIR/server.properties" "$ROOT/server.properties"
 
 if [[ ! -s "$ROOT/allowlist.json" ]]; then
@@ -44,9 +46,11 @@ printf '%s\n' "$VERSION" > "$ROOT/VERSION"
 chown -R minecraft:minecraft "$ROOT"
 
 install -m 0644 "$DEPLOY_DIR/bedrock.service" /etc/systemd/system/bedrock.service
+install -m 0644 "$DEPLOY_DIR/wipe-watch.service" /etc/systemd/system/wipe-watch.service
 systemctl daemon-reload
-systemctl enable bedrock.service
+systemctl enable bedrock.service wipe-watch.service
 systemctl restart bedrock.service
+systemctl restart wipe-watch.service
 
 echo
 echo "BDS installed: $VERSION"
