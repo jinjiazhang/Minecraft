@@ -5,7 +5,7 @@ export const BASE = { x: 10000, y: 80, z: 10000 };
 export const MAP_VERSION = 2;
 export const centers = Array.from({ length: 6 }, (_, i) => ({ x: BASE.x + 23 + (i % 3) * 48, y: BASE.y, z: BASE.z + 23 + Math.floor(i / 3) * 48 }));
 export function at(room: number, x = 0, y = 0, z = 0): Vector3 { const c = centers[room]; return { x: c.x + x, y: c.y + y, z: c.z + z }; }
-export function spawn(room: number): Vector3 { return at(room, 0.5, 0, 15.5); }
+export function spawn(room: number): Vector3 { return at(room, 0.5, 1, 15.5); }
 export function roomOf(p: Vector3): number { return centers.findIndex(c => Math.abs(p.x - c.x) <= 22 && Math.abs(p.z - c.z) <= 22 && p.y >= 79 && p.y <= 113); }
 export interface Station { room: number; id: string; x: number; z: number; label: string; block: string; text?: string; }
 export const stations: Station[] = [];

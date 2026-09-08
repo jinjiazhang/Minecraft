@@ -1,5 +1,5 @@
 import { CommandPermissionLevel, CustomCommandStatus, Player, system, world } from "@minecraft/server";
-import { join, tick } from "./game";
+import { join, protect, tick } from "./game";
 import { requestMenu } from "./menu";
 import { stationAt } from "./scenes";
 import { interact } from "./game";
@@ -24,6 +24,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe(event => {
 });
 world.afterEvents.playerSpawn.subscribe(event => {
   const p = event.player;
-  system.runTimeout(() => { if (p.isValid) join(p); }, 40);
+  system.run(() => { if (p.isValid) protect(p); });
+  system.runTimeout(() => { if (p.isValid) join(p); }, 10);
 });
 system.runInterval(tick, 20);

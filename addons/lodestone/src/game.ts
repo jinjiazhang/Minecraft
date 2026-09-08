@@ -4,6 +4,7 @@ import { at, BASE, buildPlan, execute, Job, MAP_VERSION, roomOf, spawn, Station,
 
 const SAVE = "lodestone:earth_quest_v2";
 const MAP = "lodestone:earth_map_v2";
+const WAIT = { x: 8.5, y: 80, z: 8.5 };
 export let quest: Quest = freshQuest();
 export let building = false;
 export let ready = false;
@@ -30,6 +31,28 @@ function load(): void {
 function configure(): void {
   for (const command of ["difficulty peaceful", "gamerule pvp false", "gamerule keepinventory true", "gamerule doMobSpawning false", "gamerule doFireTick false", "gamerule mobGriefing false", "gamerule doDaylightCycle false", "gamerule doWeatherCycle false", "time set day", "weather clear"]) dim().runCommand(command);
 }
+export function protect(p: Player): void {
+  if (!p.isValid) return;
+  p.addEffect("resistance", 200, { amplifier: 4, showParticles: false });
+  p.addEffect("slow_falling", 200, { amplifier: 0, showParticles: false });
+  p.addEffect("saturation", 200, { amplifier: 0, showParticles: false });
+}
+function atWait(p: Player): boolean {
+  return p.dimension.id === "minecraft:overworld" && Math.abs(p.location.x - WAIT.x) < 4 && Math.abs(p.location.z - WAIT.z) < 4 && p.location.y >= 79 && p.location.y < 88;
+}
+export function seat(p: Player): void {
+  protect(p);
+  const d = dim();
+  try {
+    d.runCommand("fill 4 78 4 12 78 12 minecraft:polished_deepslate");
+    d.runCommand("fill 4 79 4 12 85 12 minecraft:air");
+    d.runCommand("fill 4 79 4 12 85 12 minecraft:glass hollow");
+    world.setDefaultSpawnLocation({ x: 8, y: 80, z: 8 });
+  } catch (e) { console.warn(`EARTH_WAIT ${e}`); }
+  p.teleport(WAIT, { dimension: d });
+  p.setSpawnPoint({ x: 8, y: 80, z: 8, dimension: d });
+  p.runCommand("gamemode adventure @s");
+}
 
 // Small, bounded batches. Failed commands retry and never mark a partial map complete.
 function runJobs(jobs: Job[], done: () => void, failed: (e: unknown) => void): void {
@@ -51,6 +74,7 @@ export function checkpoint(): number { return quest.stage >= 6 ? 0 : quest.stage
 export function returnToCamp(p: Player, room = checkpoint()): void {
   if (!ready || building) { p.sendMessage("§e场景正在准备，请稍等。完成后会自动带你进入。"); return; }
   if (room < 0 || room > 5 || room > quest.stage) return;
+  protect(p);
   p.teleport(spawn(room), { dimension: dim(), facingLocation: at(room,0,2,-6) });
   p.setSpawnPoint({ ...spawn(checkpoint()), dimension: dim() });
   p.runCommand("gamemode adventure @s");
@@ -69,7 +93,7 @@ export function join(p: Player): void {
     load();
     if (!quest.roster.includes(p.name) && quest.roster.length < 2) { quest.roster.push(p.name); save(); }
     p.sendMessage(`§6欢迎来到地心探险队！§r${quest.roster.includes(p.name) ? "你是本次探险员。" : "你是陪同者，可以帮助读提示。"}\n§e触摸绿色台子看提示，金色台子打开手册。也可输入 /menu。`);
-    if (!ready) { initialize(); return; }
+    if (!ready) { seat(p); initialize(); return; }
     returnToCamp(p);
     p.sendMessage(`§e当前任务：${OBJECTIVES[quest.stage]}`);
   } catch (e) { console.error(`EARTH_JOIN ${e}`); p.sendMessage(`§c准备失败：${String(e)}。可从手册重试。`); }
@@ -142,7 +166,16 @@ export function status(): string {
 }
 // Deliberately no in-game world deletion/reset: children cannot erase each other's adventure.
 export function tick(): void {
-  if (!ready || building) return;
+  if (!ready || building) {
+    for (const p of world.getAllPlayers()) {
+      try {
+        protect(p);
+        if (!atWait(p)) seat(p);
+        p.onScreenDisplay.setActionBar("正在布置地心世界 · 请在玻璃小屋里等候");
+      } catch (e) { console.warn(`EARTH_WAIT ${p.name}: ${e}`); }
+    }
+    return;
+  }
   try { refreshVisuals(); } catch (e) { if (system.currentTick % 200 === 0) console.warn(`EARTH_VISUAL_RETRY ${e}`); }
   for (const p of world.getAllPlayers()) {
     try {
