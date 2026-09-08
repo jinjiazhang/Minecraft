@@ -1,59 +1,87 @@
-import { ItemLockMode, ItemStack, Player, system, world } from "@minecraft/server";
+import { Player, system, world } from "@minecraft/server";
 import { onJoin } from "./game";
-import { openMenu } from "./menu";
+import { requestMenu } from "./menu";
 
-const OPEN_CHAT = new Set(["!menu", "!lodestone", "!hunt", "菜单", "寻宝"]);
-const MENU_ITEM = "minecraft:compass";
-const MENU_NAME = "菜单";
-const MENU_SLOT = 8;
+interface ChatLike {
+  message: string;
+  cancel?: boolean;
+  sender?: Player;
+  player?: Player;
+}
 
-function giveMenuItem(player: Player): void {
-  const inventory = player.getComponent("minecraft:inventory");
-  const box = inventory?.container;
-  if (!box) {
+interface ChatSignal {
+  subscribe(cb: (event: ChatLike) => void): void;
+}
+
+function chatPlayer(event: ChatLike): Player | undefined {
+  const who = event.sender ?? event.player;
+  return who instanceof Player ? who : undefined;
+}
+
+function bindChat(signal: ChatSignal | undefined): void {
+  signal?.subscribe((event) => {
+    if (event.message.trim().toLowerCase() !== "menu") {
+      return;
+    }
+    event.cancel = true;
+    const player = chatPlayer(event);
+    if (player) {
+      system.run(() => requestMenu(player));
+    }
+  });
+}
+
+function registerMenuCommand(): void {
+  const startup = system.beforeEvents.startup;
+  startup.subscribe((event) => {
+    const registry = (event as { customCommandRegistry?: { registerCommand(command: object, callback: (origin: { sourceEntity?: Player }) => object): void } }).customCommandRegistry;
+    if (!registry) {
+      return;
+    }
+    try {
+      registry.registerCommand(
+        {
+          name: "lodestone:menu",
+          description: "Open the candy port menu",
+          permissionLevel: 0,
+          cheatsRequired: false,
+        },
+        (origin) => {
+          const player = origin.sourceEntity;
+          if (player instanceof Player) {
+            system.run(() => requestMenu(player));
+          }
+          return { status: 0 };
+        },
+      );
+    } catch {
+      // 当前引擎不支持自定义命令时，走聊天 menu
+    }
+  });
+}
+
+bindChat((world.beforeEvents as { chatSend?: ChatSignal }).chatSend);
+bindChat((world.afterEvents as { chatSend?: ChatSignal }).chatSend);
+registerMenuCommand();
+
+system.afterEvents.scriptEventReceive.subscribe((event) => {
+  if (event.id !== "lodestone:menu") {
     return;
   }
-  const item = new ItemStack(MENU_ITEM, 1);
-  item.nameTag = MENU_NAME;
-  item.keepOnDeath = true;
-  item.lockMode = ItemLockMode.slot;
-  box.setItem(MENU_SLOT, item);
-  player.selectedSlotIndex = MENU_SLOT;
-  player.sendMessage("§7点快捷栏最右边的「菜单」就能打开。");
-}
+  const player = event.sourceEntity;
+  if (player instanceof Player) {
+    system.run(() => requestMenu(player));
+  }
+});
 
 world.afterEvents.playerSpawn.subscribe((event) => {
   if (!event.initialSpawn) {
     return;
   }
   const player = event.player;
-  system.run(() => giveMenuItem(player));
   system.runTimeout(() => {
     if (player.isValid) {
       onJoin(player);
-      openMenu(player);
     }
-  }, 50);
-});
-
-world.beforeEvents.itemUse.subscribe((event) => {
-  if (!(event.source instanceof Player)) {
-    return;
-  }
-  const item = event.itemStack;
-  if (item.typeId !== MENU_ITEM && item.nameTag !== MENU_NAME) {
-    return;
-  }
-  event.cancel = true;
-  system.run(() => openMenu(event.source as Player));
-});
-
-const chatSend = (world.beforeEvents as { chatSend?: { subscribe(cb: (event: { message: string; sender: Player; cancel: boolean }) => void): void } }).chatSend;
-chatSend?.subscribe((event) => {
-  const text = event.message.trim().toLowerCase();
-  if (!OPEN_CHAT.has(text) && !OPEN_CHAT.has(event.message.trim())) {
-    return;
-  }
-  event.cancel = true;
-  system.run(() => openMenu(event.sender));
+  }, 80);
 });

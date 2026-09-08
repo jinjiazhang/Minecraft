@@ -1,7 +1,7 @@
 import { Player, system, world } from "@minecraft/server";
-import { asVector, buildCandyPort } from "./park";
+import { asVector, prepareCandyPort } from "./park";
 import { tickPuzzles } from "./puzzles";
-import { clearCourse, course, createState, missingTokens, sessions, setCourse } from "./state";
+import { building, clearCourse, course, createState, missingTokens, sessions, setBuilding, setCourse } from "./state";
 import { tryOpenTower } from "./tower";
 
 export function tellStory(player: Player): void {
@@ -19,16 +19,38 @@ export function remind(player: Player): boolean {
   return true;
 }
 
-export function startGame(player: Player): void {
-  const built = setCourse(buildCandyPort(player, course));
+function finishStart(player: Player): void {
   sessions.set(player.id, createState());
   player.runCommand("gamemode adventure @s");
   for (const item of ["amethyst_shard", "slime_ball", "glass", "gold_nugget", "cookie", "red_dye", "blue_dye", "yellow_dye"]) {
     player.runCommand(`clear @s ${item}`);
   }
-  player.teleport(asVector(built.hub));
   player.sendMessage("§d—— 彩虹糖果港 ——");
   tellStory(player);
+}
+
+function beginBuild(player: Player, startHunt: boolean): void {
+  if (building) {
+    player.sendMessage("§7正在清地形、布置糖果港，请稍等。");
+    return;
+  }
+  setBuilding(true);
+  player.sendMessage("§e先清掉默认地图，再铺糖果港…");
+  prepareCandyPort(player, course, (built) => {
+    setCourse(built);
+    setBuilding(false);
+    player.teleport(asVector(built.hub));
+    if (startHunt) {
+      finishStart(player);
+      return;
+    }
+    player.sendMessage("§a原版地形已清掉，糖果港已经铺好。聊天输入 menu 打开菜单。");
+    tellStory(player);
+  });
+}
+
+export function startGame(player: Player): void {
+  beginBuild(player, true);
 }
 
 export function resumeGame(player: Player): void {
@@ -56,19 +78,10 @@ export function wipeWorld(player: Player): void {
 export function onJoin(player: Player): void {
   if (course) {
     player.teleport(asVector(course.hub));
-    player.sendMessage("§d欢迎来到彩虹糖果港。§r打开菜单开始救人。");
+    player.sendMessage("§d欢迎来到彩虹糖果港。§r聊天输入 menu 打开菜单。");
     return;
   }
-  player.sendMessage("§e正在建造糖果港…");
-  system.runTimeout(() => {
-    if (!player.isValid) {
-      return;
-    }
-    setCourse(buildCandyPort(player));
-    player.teleport(asVector(course!.hub));
-    player.sendMessage("§a港口和五条糖路已经出现。打开菜单开始。");
-    tellStory(player);
-  }, 25);
+  beginBuild(player, false);
 }
 
 function tick(): void {

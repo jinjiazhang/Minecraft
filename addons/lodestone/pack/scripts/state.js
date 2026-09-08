@@ -15,12 +15,17 @@ export const TOKEN_NAME = {
 export const ALL_TOKENS = ["notes", "maze", "mirror", "keys", "cart"];
 export const sessions = new Map();
 export let course;
+export let building = false;
 export function setCourse(next) {
     course = next;
     return next;
 }
+export function setBuilding(next) {
+    building = next;
+}
 export function clearCourse() {
     course = undefined;
+    building = false;
     sessions.clear();
 }
 export function createState() {

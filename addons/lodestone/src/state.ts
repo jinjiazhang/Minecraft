@@ -36,14 +36,20 @@ export const ALL_TOKENS: TokenId[] = ["notes", "maze", "mirror", "keys", "cart"]
 
 export const sessions = new Map<string, HuntState>();
 export let course: Course | undefined;
+export let building = false;
 
 export function setCourse(next: Course): Course {
   course = next;
   return next;
 }
 
+export function setBuilding(next: boolean): void {
+  building = next;
+}
+
 export function clearCourse(): void {
   course = undefined;
+  building = false;
   sessions.clear();
 }
 

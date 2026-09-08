@@ -1,4 +1,4 @@
-import { Player, Vector3, world } from "@minecraft/server";
+import { Player, system, Vector3, world } from "@minecraft/server";
 
 export interface Site {
   x: number;
@@ -8,6 +8,7 @@ export interface Site {
 
 export interface Course {
   hub: Site;
+  menu: Site;
   towerDoor: Site;
   towerTop: Site;
   notes: Site;
@@ -27,6 +28,13 @@ export interface Course {
   cartEnd: Site;
 }
 
+const FILL_LIMIT = 30000;
+const FLAT = 92;
+const CLEAR_UP = 48;
+const CLEAR_DOWN = 6;
+const TILE = 16;
+const JOBS_PER_TICK = 8;
+
 export function asVector(target: Site): Vector3 {
   return { x: target.x + 0.5, y: target.y, z: target.z + 0.5 };
 }
@@ -37,12 +45,56 @@ export function near(player: Player, target: Site, range: number): boolean {
   return Math.hypot(dx, dz) <= range;
 }
 
+export function portOrigin(player: Player, existing?: Course): Site {
+  if (existing) {
+    return existing.hub;
+  }
+  return {
+    x: Math.floor(player.location.x),
+    y: Math.max(8, Math.floor(player.location.y)),
+    z: Math.floor(player.location.z),
+  };
+}
+
+export function isMenuStand(course: Course, x: number, y: number, z: number): boolean {
+  const stand = course.menu;
+  return x === stand.x && z === stand.z && y >= stand.y && y <= stand.y + 1;
+}
+
 function nameOf(block: string): string {
   return block.replace("minecraft:", "");
 }
 
 function fill(player: Player, x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, block: string): void {
-  player.runCommand(`fill ${x1} ${y1} ${z1} ${x2} ${y2} ${z2} ${nameOf(block)}`);
+  const xa = Math.min(x1, x2);
+  const xb = Math.max(x1, x2);
+  const ya = Math.min(y1, y2);
+  const yb = Math.max(y1, y2);
+  const za = Math.min(z1, z2);
+  const zb = Math.max(z1, z2);
+  const volume = (xb - xa + 1) * (yb - ya + 1) * (zb - za + 1);
+  if (volume <= FILL_LIMIT) {
+    player.runCommand(`fill ${xa} ${ya} ${za} ${xb} ${yb} ${zb} ${nameOf(block)}`);
+    return;
+  }
+  const dx = xb - xa;
+  const dy = yb - ya;
+  const dz = zb - za;
+  if (dx >= dy && dx >= dz) {
+    const mid = xa + Math.floor(dx / 2);
+    fill(player, xa, ya, za, mid, yb, zb, block);
+    fill(player, mid + 1, ya, za, xb, yb, zb, block);
+    return;
+  }
+  if (dz >= dy) {
+    const mid = za + Math.floor(dz / 2);
+    fill(player, xa, ya, za, xb, yb, mid, block);
+    fill(player, xa, ya, mid + 1, xb, yb, zb, block);
+    return;
+  }
+  const mid = ya + Math.floor(dy / 2);
+  fill(player, xa, ya, za, xb, mid, zb, block);
+  fill(player, xa, mid + 1, za, xb, yb, zb, block);
 }
 
 function put(player: Player, x: number, y: number, z: number, block: string): void {
@@ -87,10 +139,41 @@ function house(
   }
 }
 
-export function buildCandyPort(player: Player, existing?: Course): Course {
-  const cx = existing ? existing.hub.x : Math.floor(player.location.x);
-  const cz = existing ? existing.hub.z : Math.floor(player.location.z);
-  const y = existing ? existing.hub.y : Math.max(8, Math.floor(player.location.y));
+function floorBlock(x: number, z: number): string {
+  return (Math.floor(x / 8) + Math.floor(z / 8)) % 2 === 0
+    ? "minecraft:lime_concrete"
+    : "minecraft:yellow_concrete";
+}
+
+function flattenJobs(player: Player, hub: Site): Array<() => void> {
+  const jobs: Array<() => void> = [];
+  const { x: cx, y, z: cz } = hub;
+  for (let x = cx - FLAT; x <= cx + FLAT; x += TILE) {
+    for (let z = cz - FLAT; z <= cz + FLAT; z += TILE) {
+      const x2 = Math.min(x + TILE - 1, cx + FLAT);
+      const z2 = Math.min(z + TILE - 1, cz + FLAT);
+      jobs.push(() => fill(player, x, y, z, x2, y + CLEAR_UP, z2, "minecraft:air"));
+      jobs.push(() => fill(player, x, y - CLEAR_DOWN, z, x2, y - 2, z2, "minecraft:pink_concrete"));
+      jobs.push(() => fill(player, x, y - 1, z, x2, y - 1, z2, floorBlock(x, z)));
+    }
+  }
+  return jobs;
+}
+
+function runJobs(jobs: Array<() => void>, index: number, done: () => void): void {
+  const end = Math.min(index + JOBS_PER_TICK, jobs.length);
+  for (let i = index; i < end; i++) {
+    jobs[i]();
+  }
+  if (end < jobs.length) {
+    system.runTimeout(() => runJobs(jobs, end, done), 1);
+    return;
+  }
+  done();
+}
+
+function buildCandyPort(player: Player, hub: Site): Course {
+  const { x: cx, y, z: cz } = hub;
 
   fill(player, cx - 34, y - 1, cz - 38, cx + 34, y - 1, cz + 34, "minecraft:lime_concrete");
   fill(player, cx - 34, y, cz - 38, cx + 34, y + 8, cz + 34, "minecraft:air");
@@ -103,6 +186,8 @@ export function buildCandyPort(player: Player, existing?: Course): Course {
   fill(player, cx - 2, y - 1, cz - 2, cx + 2, y - 1, cz + 2, "minecraft:orange_concrete");
   put(player, cx, y, cz - 6, "minecraft:lantern");
   put(player, cx, y, cz + 6, "minecraft:lantern");
+  put(player, cx, y, cz + 3, "minecraft:gold_block");
+  put(player, cx, y + 1, cz + 3, "oak_button [\"facing_direction\"=1]");
 
   fill(player, cx - 3, y - 1, cz - 16, cx + 3, y - 1, cz - 8, "minecraft:gold_block");
   fill(player, cx - 3, y, cz - 16, cx + 3, y + 9, cz - 8, "minecraft:pink_concrete");
@@ -165,6 +250,7 @@ export function buildCandyPort(player: Player, existing?: Course): Course {
 
   const course: Course = {
     hub: { x: cx, y, z: cz },
+    menu: { x: cx, y, z: cz + 3 },
     towerDoor: { x: cx, y, z: cz - 8 },
     towerTop: { x: cx, y: y + 9, z: cz - 12 },
     notes: { x: cx, y, z: cz + 21 },
@@ -195,4 +281,14 @@ export function buildCandyPort(player: Player, existing?: Course): Course {
 
   world.setDefaultSpawnLocation({ x: cx, y, z: cz });
   return course;
+}
+
+export function prepareCandyPort(player: Player, existing: Course | undefined, done: (course: Course) => void): void {
+  const hub = portOrigin(player, existing);
+  fill(player, hub.x - 2, hub.y - 1, hub.z - 2, hub.x + 2, hub.y - 1, hub.z + 2, "minecraft:orange_concrete");
+  fill(player, hub.x - 2, hub.y, hub.z - 2, hub.x + 2, hub.y + 6, hub.z + 2, "minecraft:air");
+  player.teleport(asVector(hub));
+  runJobs(flattenJobs(player, hub), 0, () => {
+    done(buildCandyPort(player, hub));
+  });
 }
