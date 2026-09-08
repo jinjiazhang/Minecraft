@@ -1,51 +1,32 @@
-import { Player, system, world } from "@minecraft/server";
+import { CommandPermissionLevel, CustomCommandStatus, Player, system, world, } from "@minecraft/server";
 import { onJoin } from "./game";
 import { requestMenu } from "./menu";
-function chatPlayer(event) {
-    const who = event.sender ?? event.player;
-    return who instanceof Player ? who : undefined;
+function openFromChat(message, player, event) {
+    if (message.trim().toLowerCase() !== "menu" || !(player instanceof Player)) {
+        return;
+    }
+    event.cancel = true;
+    system.run(() => requestMenu(player));
 }
-function bindChat(signal) {
-    signal?.subscribe((event) => {
-        if (event.message.trim().toLowerCase() !== "menu") {
-            return;
+system.beforeEvents.startup.subscribe((event) => {
+    event.customCommandRegistry.registerCommand({
+        name: "lodestone:menu",
+        description: "Open the candy port menu",
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false,
+    }, (origin) => {
+        const player = origin.sourceEntity;
+        if (!(player instanceof Player)) {
+            return { status: CustomCommandStatus.Failure, message: "Only a player can open the menu." };
         }
-        event.cancel = true;
-        const player = chatPlayer(event);
-        if (player) {
-            system.run(() => requestMenu(player));
-        }
+        system.run(() => requestMenu(player));
+        return { status: CustomCommandStatus.Success };
     });
-}
-function registerMenuCommand() {
-    const startup = system.beforeEvents.startup;
-    startup.subscribe((event) => {
-        const registry = event.customCommandRegistry;
-        if (!registry) {
-            return;
-        }
-        try {
-            registry.registerCommand({
-                name: "lodestone:menu",
-                description: "Open the candy port menu",
-                permissionLevel: 0,
-                cheatsRequired: false,
-            }, (origin) => {
-                const player = origin.sourceEntity;
-                if (player instanceof Player) {
-                    system.run(() => requestMenu(player));
-                }
-                return { status: 0 };
-            });
-        }
-        catch {
-            // 当前引擎不支持自定义命令时，走聊天 menu
-        }
-    });
-}
-bindChat(world.beforeEvents.chatSend);
-bindChat(world.afterEvents.chatSend);
-registerMenuCommand();
+});
+const beforeChat = world.beforeEvents.chatSend;
+beforeChat?.subscribe((event) => {
+    openFromChat(event.message, event.sender ?? event.player, event);
+});
 system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (event.id !== "lodestone:menu") {
         return;

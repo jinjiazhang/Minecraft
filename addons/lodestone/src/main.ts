@@ -1,68 +1,44 @@
-import { Player, system, world } from "@minecraft/server";
+import {
+  CommandPermissionLevel,
+  CustomCommandStatus,
+  Player,
+  system,
+  world,
+} from "@minecraft/server";
 import { onJoin } from "./game";
 import { requestMenu } from "./menu";
 
-interface ChatLike {
-  message: string;
-  cancel?: boolean;
-  sender?: Player;
-  player?: Player;
+function openFromChat(message: string, player: Player | undefined, event: { cancel?: boolean }): void {
+  if (message.trim().toLowerCase() !== "menu" || !(player instanceof Player)) {
+    return;
+  }
+  event.cancel = true;
+  system.run(() => requestMenu(player));
 }
 
-interface ChatSignal {
-  subscribe(cb: (event: ChatLike) => void): void;
-}
-
-function chatPlayer(event: ChatLike): Player | undefined {
-  const who = event.sender ?? event.player;
-  return who instanceof Player ? who : undefined;
-}
-
-function bindChat(signal: ChatSignal | undefined): void {
-  signal?.subscribe((event) => {
-    if (event.message.trim().toLowerCase() !== "menu") {
-      return;
-    }
-    event.cancel = true;
-    const player = chatPlayer(event);
-    if (player) {
+system.beforeEvents.startup.subscribe((event) => {
+  event.customCommandRegistry.registerCommand(
+    {
+      name: "lodestone:menu",
+      description: "Open the candy port menu",
+      permissionLevel: CommandPermissionLevel.Any,
+      cheatsRequired: false,
+    },
+    (origin) => {
+      const player = origin.sourceEntity;
+      if (!(player instanceof Player)) {
+        return { status: CustomCommandStatus.Failure, message: "Only a player can open the menu." };
+      }
       system.run(() => requestMenu(player));
-    }
-  });
-}
+      return { status: CustomCommandStatus.Success };
+    },
+  );
+});
 
-function registerMenuCommand(): void {
-  const startup = system.beforeEvents.startup;
-  startup.subscribe((event) => {
-    const registry = (event as { customCommandRegistry?: { registerCommand(command: object, callback: (origin: { sourceEntity?: Player }) => object): void } }).customCommandRegistry;
-    if (!registry) {
-      return;
-    }
-    try {
-      registry.registerCommand(
-        {
-          name: "lodestone:menu",
-          description: "Open the candy port menu",
-          permissionLevel: 0,
-          cheatsRequired: false,
-        },
-        (origin) => {
-          const player = origin.sourceEntity;
-          if (player instanceof Player) {
-            system.run(() => requestMenu(player));
-          }
-          return { status: 0 };
-        },
-      );
-    } catch {
-      // 当前引擎不支持自定义命令时，走聊天 menu
-    }
-  });
-}
-
-bindChat((world.beforeEvents as { chatSend?: ChatSignal }).chatSend);
-bindChat((world.afterEvents as { chatSend?: ChatSignal }).chatSend);
-registerMenuCommand();
+const beforeChat = (world.beforeEvents as { chatSend?: { subscribe(cb: (event: { message: string; sender?: Player; player?: Player; cancel?: boolean }) => void): void } }).chatSend;
+beforeChat?.subscribe((event) => {
+  openFromChat(event.message, event.sender ?? event.player, event);
+});
 
 system.afterEvents.scriptEventReceive.subscribe((event) => {
   if (event.id !== "lodestone:menu") {

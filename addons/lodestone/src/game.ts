@@ -44,7 +44,7 @@ function beginBuild(player: Player, startHunt: boolean): void {
       finishStart(player);
       return;
     }
-    player.sendMessage("§a原版地形已清掉，糖果港已经铺好。聊天输入 menu 打开菜单。");
+    player.sendMessage("§a原版地形已清掉，糖果港已经铺好。聊天输入 /menu 打开菜单。");
     tellStory(player);
   });
 }
@@ -78,7 +78,7 @@ export function wipeWorld(player: Player): void {
 export function onJoin(player: Player): void {
   if (course) {
     player.teleport(asVector(course.hub));
-    player.sendMessage("§d欢迎来到彩虹糖果港。§r聊天输入 menu 打开菜单。");
+    player.sendMessage("§d欢迎来到彩虹糖果港。§r聊天输入 /menu 打开菜单。");
     return;
   }
   beginBuild(player, false);

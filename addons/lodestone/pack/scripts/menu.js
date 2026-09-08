@@ -17,7 +17,7 @@ function confirmWipe(player) {
         wipeWorld(player);
     })
         .catch(() => {
-        player.sendMessage("§c清档确认打不开，聊天输入 menu。");
+        player.sendMessage("§c清档确认打不开，输入 /menu。");
     });
 }
 export function requestMenu(player) {
@@ -36,7 +36,7 @@ function showMenu(player, attempt) {
     const running = sessions.has(player.id);
     const form = new ActionFormData()
         .title("彩虹糖果港")
-        .body("果冻精灵被锁在塔顶。走五条糖路找回信物，就能打开塔门。\n聊天输入 menu 打开这个菜单。")
+        .body("果冻精灵被锁在塔顶。走五条糖路找回信物，就能打开塔门。\n聊天输入 /menu 打开这个菜单。")
         .button("开始救人")
         .button("重新开始")
         .button("还缺哪些信物");
@@ -69,7 +69,7 @@ function showMenu(player, attempt) {
             system.runTimeout(() => showMenu(player, attempt + 1), 12);
             return;
         }
-        player.sendMessage("§c菜单被挡住了，再输入一次 menu。");
+        player.sendMessage("§c菜单被挡住了，再输入一次 /menu。");
     });
 }
 export function openMenu(player) {

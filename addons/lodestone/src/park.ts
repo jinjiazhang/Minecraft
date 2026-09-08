@@ -187,7 +187,7 @@ function buildCandyPort(player: Player, hub: Site): Course {
   put(player, cx, y, cz - 6, "minecraft:lantern");
   put(player, cx, y, cz + 6, "minecraft:lantern");
   put(player, cx, y, cz + 3, "minecraft:gold_block");
-  put(player, cx, y + 1, cz + 3, "oak_button [\"facing_direction\"=1]");
+  put(player, cx, y + 1, cz + 3, "minecraft:lantern");
 
   fill(player, cx - 3, y - 1, cz - 16, cx + 3, y - 1, cz - 8, "minecraft:gold_block");
   fill(player, cx - 3, y, cz - 16, cx + 3, y + 9, cz - 8, "minecraft:pink_concrete");
