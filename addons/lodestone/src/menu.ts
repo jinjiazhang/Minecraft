@@ -24,7 +24,7 @@ export function requestMenu(p: Player): void {
       open.delete(p.id);
       if (!response.canceled && response.selection !== undefined) actions[response.selection]?.();
       else if (response.cancelationReason === FormCancelationReason.UserBusy) p.sendMessage("§e请先关闭聊天或背包，再触摸金色台子打开手册。");
-    }).catch(e => { open.delete(p.id); console.warn(`EARTH_MENU ${e}`); if (p.isValid) p.sendMessage("§e手册暂时打不开，请关闭其他窗口后重试 /lodestone:menu。"); });
+    }).catch(e => { open.delete(p.id); console.warn(`EARTH_MENU ${e}`); if (p.isValid) p.sendMessage("§e手册暂时打不开，请关闭其他窗口后重试 /menu。"); });
   };
   system.runTimeout(() => show(0), 8);
 }

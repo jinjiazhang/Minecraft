@@ -84,6 +84,14 @@ test('All 37+ stations have intact markers/signs and a reachable interaction pos
     }
   }
 });
+test('Build uses Bedrock block ids, not Java-only names', () => {
+  const javaOnly = new Set(['flowering_azalea_leaves', 'rooted_dirt', 'grass_block']);
+  const q = freshQuest(); q.stage = 6; q.pairs = { valve0: true, valve1: true };
+  for (const j of [...jobs, ...visualPlan(q)]) {
+    if (j.kind !== 'fill') continue;
+    assert(!javaOnly.has(j.block), j.block);
+  }
+});
 test('Progress and finale visual operations are bounded and preserve station controls', () => {
   for(let stage=0;stage<=6;stage++) {
     const q=freshQuest(); q.stage=stage;

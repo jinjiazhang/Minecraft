@@ -83,7 +83,7 @@ export function buildPlan() {
     const tree = (x, z, lit) => {
         box(x - 1, 0, z - 1, x + 1, 7, z + 1, "oak_log");
         box(x - 4, 7, z - 3, x + 4, 9, z + 3, "azalea_leaves");
-        box(x - 3, 10, z - 2, x + 3, 11, z + 2, "flowering_azalea_leaves");
+        box(x - 3, 10, z - 2, x + 3, 11, z + 2, "azalea_leaves_flowered");
         for (const dx of [-3, 3]) {
             box(x + dx, 5, z, x + dx, 7, z, "oak_log");
             put(x + dx, 6, z + 2, lit ? "shroomlight" : "brown_wool");
@@ -117,7 +117,7 @@ export function buildPlan() {
         for (let k = 0; k < 24; k++) {
             const x = (k * 13 + r * 7) % 37 - 18, z = (k * 17 + r * 3) % 37 - 18;
             if (Math.abs(x) > 5 && Math.abs(z) > 5)
-                put(x, -1, z, r === 1 ? "copper_block" : r === 4 ? "amethyst_block" : "rooted_dirt");
+                put(x, -1, z, r === 1 ? "copper_block" : r === 4 ? "amethyst_block" : "dirt_with_roots");
         }
         for (let t = -16; t <= 16; t += 8) {
             box(t, 0, -20, t + 1, 9 + Math.abs(t % 3), -19, r === 1 ? "deepslate_bricks" : "tuff");
@@ -227,7 +227,7 @@ export function buildPlan() {
             box(-1, -1, -5, 1, -1, 7, "amethyst_block");
         }
         else {
-            box(-8, -1, -10, 8, -1, 6, "flowering_azalea_leaves");
+            box(-8, -1, -10, 8, -1, 6, "azalea_leaves_flowered");
             box(-2, -1, -10, 2, -1, 12, "smooth_sandstone");
             for (const x of [-6, 6]) {
                 box(x - 2, -1, -5, x + 2, -1, -1, "moss_block");
@@ -241,7 +241,7 @@ export function buildPlan() {
                 box(x, 0, 1, x, 7, 1, "mossy_stone_bricks");
             }
             box(-12, 10, -9, 12, 10, -9, "mossy_stone_bricks");
-            box(-8, 9, -9, 8, 9, -9, "flowering_azalea_leaves");
+            box(-8, 9, -9, 8, 9, -9, "azalea_leaves_flowered");
             crystal(0, -14, 8, "yellow_stained_glass");
         }
     }
@@ -278,7 +278,7 @@ export function visualPlan(q) {
         for (const room of [0, 5])
             for (const x of [-6, 6]) {
                 jobs.push({ kind: "fill", a: at(room, x, 0, -4), b: at(room, x, 6, -4), block: "oak_log" });
-                jobs.push({ kind: "fill", a: at(room, x - 2, 6, -6), b: at(room, x + 2, 8, -2), block: "flowering_azalea_leaves" });
+                jobs.push({ kind: "fill", a: at(room, x - 2, 6, -6), b: at(room, x + 2, 8, -2), block: "azalea_leaves_flowered" });
                 put(room, x, 9, -4, "sea_lantern");
                 put(room, x - 2, 6, -3, "shroomlight");
                 put(room, x + 2, 6, -3, "shroomlight");

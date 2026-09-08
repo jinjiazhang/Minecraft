@@ -68,7 +68,7 @@ export function join(p: Player): void {
   try {
     load();
     if (!quest.roster.includes(p.name) && quest.roster.length < 2) { quest.roster.push(p.name); save(); }
-    p.sendMessage(`§6欢迎来到地心探险队！§r${quest.roster.includes(p.name) ? "你是本次探险员。" : "你是陪同者，可以帮助读提示。"}\n§e触摸绿色台子看提示，金色台子打开手册。也可输入 /lodestone:menu。`);
+    p.sendMessage(`§6欢迎来到地心探险队！§r${quest.roster.includes(p.name) ? "你是本次探险员。" : "你是陪同者，可以帮助读提示。"}\n§e触摸绿色台子看提示，金色台子打开手册。也可输入 /menu。`);
     if (!ready) { initialize(); return; }
     returnToCamp(p);
     p.sendMessage(`§e当前任务：${OBJECTIVES[quest.stage]}`);
@@ -83,7 +83,7 @@ export function initialize(): void {
     try { dim().runCommand("tickingarea remove earth_adventure"); } catch { /* first installation */ }
     dim().runCommand(`tickingarea add ${BASE.x} 80 ${BASE.z} ${BASE.x + 143} 80 ${BASE.z + 95} earth_adventure true`);
   } catch (e) { building = false; throw e; }
-  const fail = (e: unknown) => { building = false; ready = false; say("场景准备中断，原进度已保存。输入 /lodestone:menu，点「重试准备」。"); console.error(`EARTH_INIT ${e}`); };
+  const fail = (e: unknown) => { building = false; ready = false; say("场景准备中断，原进度已保存。输入 /menu，点「重试准备」。"); console.error(`EARTH_INIT ${e}`); };
   const finish = () => {
     try {
       refreshVisuals();
