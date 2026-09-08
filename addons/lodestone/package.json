@@ -2,7 +2,8 @@
   "name": "lodestone",
   "private": true,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "node tests/adventure.cjs"
   },
   "devDependencies": {
     "@minecraft/server": "^2.1.0",

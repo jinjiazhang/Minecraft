@@ -1,84 +1,30 @@
 import { Player, system } from "@minecraft/server";
-import { ActionFormData } from "@minecraft/server-ui";
-import { remind, resumeGame, wipeWorld } from "./game";
-import { sessions } from "./state";
-
-const lastOpen = new Map<string, number>();
-
-function confirmWipe(player: Player): void {
-  new ActionFormData()
-    .title("重新开始")
-    .body("会删除整个世界，再生成一张新地图。所有人都要重新进服。")
-    .button("确定清档")
-    .button("取消")
-    .show(player)
-    .then((response) => {
-      if (response.canceled || response.selection !== 0) {
-        return;
-      }
-      wipeWorld(player);
-    })
-    .catch(() => {
-      player.sendMessage("§c清档确认打不开，输入 /menu。");
-    });
-}
-
-export function requestMenu(player: Player): void {
-  const now = Date.now();
-  if ((lastOpen.get(player.id) ?? 0) + 800 > now) {
-    return;
-  }
-  lastOpen.set(player.id, now);
-  system.runTimeout(() => {
-    if (player.isValid) {
-      showMenu(player, 0);
+import { ActionFormData, FormCancelationReason } from "@minecraft/server-ui";
+import { checkpoint, hint, initialize, quest, ready, returnToCamp, status } from "./game";
+import { TITLES } from "./quest";
+const open = new Set<string>();
+export function requestMenu(p: Player): void {
+  if (open.has(p.id)) return;
+  open.add(p.id);
+  const show = (attempt: number) => {
+    if (!p.isValid) { open.delete(p.id); return; }
+    const actions: Array<() => void> = [];
+    const form = new ActionFormData().title("地心探险队 · 探险手册").body(`${status()}\n\n空手触摸彩色台子或路牌。线索可轮流读，机关不需要同时操作。`);
+    const add = (label: string, action: () => void) => { form.button(label); actions.push(action); };
+    if (!ready) add("重试准备 / 等待建造完成", () => { try { initialize(); } catch (e) { p.sendMessage(`准备失败：${e}`); } });
+    else {
+      add("继续探险 / 我迷路了\n返回当前集合点", () => returnToCamp(p));
+      add("给我一点提示", () => hint(p));
+      add("告诉我具体怎么做", () => hint(p, true));
+      for (let r = 0; r <= Math.min(quest.stage, 5); r++) if (r !== checkpoint()) add(`参观 · ${TITLES[r]}`, () => returnToCamp(p,r));
     }
-  }, 8);
-}
-
-function showMenu(player: Player, attempt: number): void {
-  const running = sessions.has(player.id);
-  const form = new ActionFormData()
-    .title("彩虹糖果港")
-    .body("果冻精灵被锁在塔顶。走五条糖路找回信物，就能打开塔门。\n聊天输入 /menu 打开这个菜单。")
-    .button("开始救人")
-    .button("重新开始")
-    .button("还缺哪些信物");
-
-  if (running) {
-    form.button("先退出");
-  }
-
-  form.show(player).then((response) => {
-    if (response.canceled || response.selection === undefined) {
-      return;
-    }
-    if (response.selection === 0) {
-      resumeGame(player);
-      return;
-    }
-    if (response.selection === 1) {
-      confirmWipe(player);
-      return;
-    }
-    if (response.selection === 2) {
-      if (!remind(player)) {
-        player.sendMessage("§7还没开始，先点「开始救人」。");
-      }
-      return;
-    }
-    sessions.delete(player.id);
-    player.runCommand("gamemode survival @s");
-    player.sendMessage("§e已退出。地图还在，随时可以再来。");
-  }).catch(() => {
-    if (attempt < 4) {
-      system.runTimeout(() => showMenu(player, attempt + 1), 12);
-      return;
-    }
-    player.sendMessage("§c菜单被挡住了，再输入一次 /menu。");
-  });
-}
-
-export function openMenu(player: Player): void {
-  requestMenu(player);
+    add("合上手册", () => {});
+    form.show(p).then(response => {
+      if (response.canceled && response.cancelationReason === FormCancelationReason.UserBusy && attempt < 4) { system.runTimeout(() => show(attempt + 1), 20); return; }
+      open.delete(p.id);
+      if (!response.canceled && response.selection !== undefined) actions[response.selection]?.();
+      else if (response.cancelationReason === FormCancelationReason.UserBusy) p.sendMessage("§e请先关闭聊天或背包，再触摸金色台子打开手册。");
+    }).catch(e => { open.delete(p.id); console.warn(`EARTH_MENU ${e}`); if (p.isValid) p.sendMessage("§e手册暂时打不开，请关闭其他窗口后重试 /lodestone:menu。"); });
+  };
+  system.runTimeout(() => show(0), 8);
 }
