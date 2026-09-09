@@ -13,6 +13,7 @@ let lastVisual = "";
 const hints = new Map();
 const cooldown = new Map();
 const visits = new Map();
+const landed = new Map();
 export function dim() { return world.getDimension("overworld"); }
 function save() { world.setDynamicProperty(SAVE, JSON.stringify(quest)); }
 function participants() { return world.getAllPlayers().filter(p => quest.roster.includes(p.name)); }
@@ -56,7 +57,7 @@ export function seat(p) {
     catch (e) {
         console.warn(`EARTH_WAIT ${e}`);
     }
-    p.teleport(WAIT, { dimension: d });
+    p.teleport(WAIT, { dimension: d, keepVelocity: false });
     p.setSpawnPoint({ x: 8, y: 80, z: 8, dimension: d });
     p.runCommand("gamemode adventure @s");
 }
@@ -97,12 +98,16 @@ export function returnToCamp(p, room = checkpoint()) {
     }
     if (room < 0 || room > 5 || room > quest.stage)
         return;
+    const quiet = (landed.get(p.id) ?? 0) > system.currentTick;
     protect(p);
-    p.teleport(spawn(room), { dimension: dim(), facingLocation: at(room, 0, 2, -6) });
+    p.teleport(spawn(room), { dimension: dim(), facingLocation: at(room, 0, 2, -6), keepVelocity: false });
     p.setSpawnPoint({ ...spawn(checkpoint()), dimension: dim() });
+    landed.set(p.id, system.currentTick + 40);
+    visits.set(p.id, room);
+    if (quiet)
+        return;
     p.runCommand("gamemode adventure @s");
     p.onScreenDisplay.setTitle(`§e${TITLES[room]}`, { subtitle: room === checkpoint() ? OBJECTIVES[quest.stage] : "自由参观 · 金色旅程台返回当前任务", fadeInDuration: 10, stayDuration: 65, fadeOutDuration: 20 });
-    visits.set(p.id, room);
 }
 export function refreshVisuals() {
     const signature = JSON.stringify([quest.stage, quest.parts, quest.step, quest.pairs]);

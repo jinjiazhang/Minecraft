@@ -2,7 +2,7 @@ import { BlockPermutation, Dimension, Vector3 } from "@minecraft/server";
 import { Quest, TITLES } from "./quest";
 
 export const BASE = { x: 10000, y: 80, z: 10000 };
-export const MAP_VERSION = 2;
+export const MAP_VERSION = 3;
 export const centers = Array.from({ length: 6 }, (_, i) => ({ x: BASE.x + 23 + (i % 3) * 48, y: BASE.y, z: BASE.z + 23 + Math.floor(i / 3) * 48 }));
 export function at(room: number, x = 0, y = 0, z = 0): Vector3 { const c = centers[room]; return { x: c.x + x, y: c.y + y, z: c.z + z }; }
 export function spawn(room: number): Vector3 { return at(room, 0.5, 1, 15.5); }
@@ -86,6 +86,7 @@ export function buildPlan(): Job[] {
     box(x - 2, 0, z + 1, x - 2, 0, z + 2, "red_wool"); put(x - 2, 0, z, "white_wool");
   };
   for (r = 0; r < 6; r++) {
+    box(-23, -14, -23, 23, -3, 23, "stone");
     for (let y = -2; y < 34; y += 6) box(-23, y, -23, 23, Math.min(y + 5, 33), 23, "stone");
     // Stepped cavern vault, tall center and lower edges; no exposed default landscape.
     box(-20, 0, -20, 20, 8, 20, "air"); box(-18, 9, -18, 18, 15, 18, "air");
