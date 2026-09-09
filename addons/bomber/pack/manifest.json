@@ -1,0 +1,50 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "炸弹人 · 双人竞技场",
+    "description": "进服自动加入 · 双人炸弹对战 · 连锁爆炸与随机道具",
+    "uuid": "ea75e06e-345d-4886-a8dc-25481aa3688e",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      80
+    ]
+  },
+  "modules": [
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "368bb04e-ab6c-405a-b406-e7b71812d2ab",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js"
+    },
+    {
+      "type": "data",
+      "uuid": "dfdece80-a762-4031-bc98-6a23825cf870",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.1.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    }
+  ]
+}

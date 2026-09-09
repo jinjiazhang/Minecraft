@@ -1,0 +1,13 @@
+{
+  "name": "bomber",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "node tests/bomber.cjs && node tests/bomber-session.cjs && node tests/startup.cjs"
+  },
+  "devDependencies": {
+    "@minecraft/server": "^2.1.0",
+    "@minecraft/server-ui": "^2.0.0",
+    "typescript": "^5.8.3"
+  }
+}
