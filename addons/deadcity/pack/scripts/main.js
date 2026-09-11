@@ -15,6 +15,15 @@ function health(p){const h=p.getComponent('minecraft:health');if(h)h.setCurrentV
 function sound(p,id,pitch=1){try{p.playSound(id,{pitch,volume:.7});}catch{}}
 function container(p){return p.getComponent('minecraft:inventory')?.container;}
 function selected(p){return container(p)?.getItem(p.selectedSlotIndex)?.typeId;}
+function equipGun(p){
+ const c=container(p);if(!c)return false;
+ for(let i=0;i<c.size;i++)if(c.getItem(i)?.typeId==='dead:gun'){
+  if(i<9)p.selectedSlotIndex=i;
+  else{const slot=p.selectedSlotIndex,old=c.getItem(slot),gun=c.getItem(i);c.setItem(slot,gun);c.setItem(i,old);}
+  return true;
+ }
+ p.sendMessage('§e请先在背包留出空位，再打开无线电领取枪械。');return false;
+}
 function kit(p){
  const c=container(p);if(!c)return;
  for(const [id,name] of [['gun',WEAPONS[data(p).tier].name],['radio','无线电 · 任务 / 升级'],['reload','弹匣 · 使用换弹'],['medkit','医疗包 · 使用治疗'],['lure','诱饵 · 使用投掷']]){
@@ -36,7 +45,8 @@ function base(p,message=''){
 function start(p){
  if(!prepared){p.sendMessage('§e城区正在准备，请稍后重试。');return;}
  if(raids.has(p.id))return;
- base(p);const r=newRaid(data(p).tier,now());raids.set(p.id,r);p.setDynamicProperty('dead:inRaid',true);p.addTag('dead_active');
+ base(p);if(!equipGun(p))return;const r=newRaid(data(p).tier,now());raids.set(p.id,r);p.setDynamicProperty('dead:inRaid',true);p.addTag('dead_active');
+ p.sendMessage('§b枪械已装备。iPad：按住「开火」按钮，松开停止；电脑：按住右键。基地内禁止开火。');
  p.sendMessage('§6行动开始 · 20 分钟\n§f潜行停在补给标记旁 3 秒搜集。搜集 3 处可获额外奖励；到任一绿色撤离点停留 12 秒带回物资。\n§e枪声会引来尸群；无线电可查看目标和退出。');
 }
 function finish(p){const r=raids.get(p.id);if(!r)return;const before=data(p),after=settle(before,r,true);save(p,after);raids.delete(p.id);base(p,`§a撤离成功！带回 ${after.scrap-before.scrap} 零件，累计 ${after.scrap}。`);sound(p,'random.levelup');}
@@ -79,6 +89,7 @@ function shoot(p){
 }
 async function menu(p){
  if(!p.isValid||busy.has(p.id))return;busy.add(p.id);
+ const active=raids.get(p.id);if(active)active.holding=false;
  try{
  kit(p);const r=raids.get(p.id),d=data(p),w=WEAPONS[d.tier];
  const form=new ActionFormData().title('末日赫尔辛基').body(r?`行动中 · 物资 ${r.bag} / 已搜集 ${r.looted.length}/5\n医疗 ${r.meds} · 诱饵 ${r.lures}\n蹲下搜索补给；绿色标记处等待撤离。`:`Linnanmäki 幸存者基地\n零件 ${d.scrap} · 成功撤离 ${d.wins} 次\n当前武器：${w.name}\n\n开火：持枪按住使用；空弹匣自动换弹。\n跑步消耗体力，蹲行更安静，绕墙可脱离追踪。\n死亡或放弃丢失本轮物资，永久升级保留。`);

@@ -12,9 +12,10 @@ function setup(){
  const world={getAllPlayers:()=>players,getDimension:()=>d,getDynamicProperty:k=>props.get(k),setDynamicProperty:(k,v)=>props.set(k,v),afterEvents:{}};
  for(const n of ['itemStartUse','itemStopUse','playerSpawn','playerLeave','entityHurt','entityDie','entityLoad','worldLoad'])world.afterEvents[n]={subscribe:f=>hooks[n]=f};
  const system={currentTick:1000,run:f=>f(),runTimeout:f=>timeouts.push(f),runInterval:f=>intervals.push(f),beforeEvents:{startup:{subscribe:f=>f({customCommandRegistry:{registerCommand:(s,f)=>commands[s.name]={s,f}}})}},afterEvents:{scriptEventReceive:{subscribe(){}}}};
- const context=vm.createContext({...rules,world,system,Player,ItemStack,ItemLockMode:{inventory:1},GameMode:{Adventure:2},EntityDamageCause:{entityAttack:1},CommandPermissionLevel:{Any:0},CustomCommandStatus:{Success:0,Failure:1},ActionFormData:class{},console});
+ class Form{title(){return this;}body(){return this;}button(){return this;}async show(){return{canceled:true};}}
+ const context=vm.createContext({...rules,world,system,Player,ItemStack,ItemLockMode:{inventory:1},GameMode:{Adventure:2},EntityDamageCause:{entityAttack:1},CommandPermissionLevel:{Any:0},CustomCommandStatus:{Success:0,Failure:1},ActionFormData:Form,console});
  const src=fs.readFileSync(new URL('../pack/scripts/main.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
- vm.runInContext(src+'\nglobalThis.api={raids,start,shoot,finish,base,points,second,ready(){prepared=true;}};',context);
+ vm.runInContext(src+'\nglobalThis.api={raids,start,shoot,finish,base,points,second,tick,menu,ready(){prepared=true;}};',context);
  return{...context.api,world,system,Player,hooks,commands,hits,enemy,setWall:v=>wall=v};
 }
 test('gun cannot hit through walls, does consume ammo; repeat damage survives native immunity',()=>{
@@ -35,4 +36,14 @@ test('kit preserves existing inventory and does not duplicate tools',()=>{
 });
 test('ordinary players can access gameplay commands but not console entities',()=>{
  const t=setup();assert.equal(t.commands['dead:menu'].s.permissionLevel,0);assert.equal(t.commands['dead:start'].f({sourceEntity:{}}).status,1);
+});
+test('starting equips a gun from the backpack without losing an occupied hotbar item',()=>{
+ const t=setup(),p=new t.Player('p');for(let i=0;i<9;i++)p.inventory[i]={typeId:'minecraft:diamond',amount:i+1};p.inventory[9]={typeId:'dead:gun'};
+ t.ready();t.start(p);assert.equal(p.inventory[p.selectedSlotIndex].typeId,'dead:gun');assert.equal(p.inventory[9].typeId,'minecraft:diamond');assert.equal(p.inventory[9].amount,1);
+});
+test('touch press fires continuously; release and opening radio stop firing',async()=>{
+ const t=setup(),p=new t.Player('p');t.ready();t.start(p);p.location.x+=50;const r=t.raids.get(p.id);
+ t.hooks.itemStartUse({source:p,itemStack:{typeId:'dead:gun'}});assert.equal(r.ammo,11);t.system.currentTick+=10;t.tick();assert.equal(r.ammo,10);
+ t.hooks.itemStopUse({source:p,itemStack:{typeId:'dead:gun'}});t.system.currentTick+=10;t.tick();assert.equal(r.ammo,10);
+ t.hooks.itemStartUse({source:p,itemStack:{typeId:'dead:gun'}});assert.equal(r.holding,true);await t.menu(p);assert.equal(r.holding,false);
 });

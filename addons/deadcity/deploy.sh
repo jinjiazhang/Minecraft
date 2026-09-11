@@ -21,7 +21,10 @@ from pathlib import Path
 import json
 r=Path('/opt/bedrock')
 (r/'behavior_packs/helsinki_admin/scripts/gameplay.js').write_text('export const gameplayEnabled = true;\n')
-packs={'behavior':[{'pack_id':'a4a49c55-b5ef-4d71-a98c-ccbb73b55dc6','version':[1,0,0]},{'pack_id':'67bd555b-4036-40bc-b0ac-d44c3dd5d197','version':[1,0,0]}],'resource':[{'pack_id':'35b4b949-a51c-4fa8-a6f3-bf43366f2875','version':[1,0,0]}]}
+source=Path('/tmp/deadcity-release')
+bp=json.loads((source/'pack/manifest.json').read_text())['header']
+rp=json.loads((source/'resource_pack/manifest.json').read_text())['header']
+packs={'behavior':[{'pack_id':'a4a49c55-b5ef-4d71-a98c-ccbb73b55dc6','version':[1,0,0]},{'pack_id':bp['uuid'],'version':bp['version']}],'resource':[{'pack_id':rp['uuid'],'version':rp['version']}]}
 for kind,data in packs.items():
     for base in (r,r/'worlds/helsinki-official'):(base/f'world_{kind}_packs.json').write_text(json.dumps(data))
 (r/'official-admin/game-packs.json').write_text(json.dumps(packs))

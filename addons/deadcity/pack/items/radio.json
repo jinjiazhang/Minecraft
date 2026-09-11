@@ -18,7 +18,7 @@
       },
       "minecraft:max_stack_size": 1,
       "minecraft:hand_equipped": false,
-      "minecraft:interact_button": "任务与升级",
+      "minecraft:interact_button": "无线电",
       "minecraft:use_modifiers": {
         "use_duration": 3600,
         "movement_modifier": 1
