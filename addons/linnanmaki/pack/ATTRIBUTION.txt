@@ -1,0 +1,7 @@
+Source: City of Helsinki, Helsinki 3D Mesh 2017. CC BY 4.0.
+https://www.hel.fi/en/decision-making/information-on-helsinki/maps-and-geospatial-data/helsinki-3d
+https://creativecommons.org/licenses/by/4.0/
+Changes: selected L16 mesh tiles, cropped to 500 x 500 metres, sampled surfaces
+onto 1 metre Minecraft blocks, approximated photo colours with block materials.
+Not affiliated with or endorsed by Linnanmäki or the City of Helsinki.
+Historical exterior surface sample only. No ride operation or interior replica.

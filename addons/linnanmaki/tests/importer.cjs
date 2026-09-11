@@ -1,0 +1,37 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'../pack/scripts/main.js'),'utf8').replace(/^import .*;\r?\n/gm,'');
+function setup() {
+  const commands={},jobs=new Map(),props=new Map(),placements=[],messages=[];
+  const events={}, visits=[];
+  let counter=0,loaded=true,throwPlace=false;
+  const d={runCommand(){return {successCount:1};}, getBlock(){return loaded?{}:undefined;}};
+  class Player {isValid=true; runCommand(){} teleport(p){visits.push(p);} setSpawnPoint(){} sendMessage(){}}
+  const system={beforeEvents:{startup:{subscribe(fn){fn({customCommandRegistry:{registerCommand(spec,fn){commands[spec.name]=fn;}}});}}},run(fn){fn();},runTimeout(fn){jobs.set(++counter,fn);return counter;},clearRun(id){jobs.delete(id);}};
+  const world={getDimension(){return d;},getDynamicProperty(k){return props.get(k);},setDynamicProperty(k,v){props.set(k,v);},sendMessage(m){messages.push(m);},structureManager:{place(id){if(throwPlace)throw Error('place failed');placements.push(id);}}};
+  world.afterEvents={worldLoad:{subscribe(fn){events.load=fn;}},playerSpawn:{subscribe(fn){events.spawn=fn;}}};
+  world.setDefaultSpawnLocation=()=>{};
+  world.getAllPlayers=()=>[];
+  system.afterEvents={scriptEventReceive:{subscribe(fn){events.script=fn;}}};
+  vm.runInNewContext(source,{system,world,Player,CommandPermissionLevel:{Admin:2},CustomCommandStatus:{Success:0,Failure:1},tiles:[{id:'a',x:20000,y:80,z:20000,sx:32,sz:32},{id:'b',x:20032,y:80,z:20000,sx:32,sz:32}]});
+  const command=name=>commands['lintsi:'+name]({sourceEntity:new Player()});
+  const step=()=>{const [id,fn]=jobs.entries().next().value; jobs.delete(id);fn();};
+  const drain=()=>{let n=0;while(jobs.size){assert.ok(n++<100);step();}};
+  return {command,step,drain,placements,props,jobs,messages,visits,load:()=>events.load(),spawn:()=>events.spawn({player:new Player()}),setLoaded(v){loaded=v;},setFailure(v){throwPlace=v;}};
+}
+let t=setup();
+assert.equal(t.jobs.size,0,'Registration must wait for world load');
+t.command('build');t.step();assert.deepEqual(t.placements,['a']);
+t.command('stop');assert.equal(t.jobs.size,0);
+t.command('build');t.drain();assert.deepEqual(t.placements,['a','b'],'Resume must not duplicate completed tiles');
+t=setup();t.setLoaded(false);t.command('build');t.drain();
+assert.equal(t.placements.length,0,'Unloaded chunks must not advance');
+assert.equal(t.props.size,0);assert.ok(t.messages.some(m=>m.includes('底图停在')));
+t.setLoaded(true);t.command('build');t.drain();assert.deepEqual(t.placements,['a','b']);
+t=setup();t.setFailure(true);t.command('build');t.drain();assert.equal(t.props.size,0,'Placement failure must remain retryable');
+t=setup();t.load();t.drain();assert.deepEqual(t.placements,['a','b'],'World load must build automatically');
+t.spawn();t.drain();assert.equal(t.visits[0].x,20200.5,'Player must enter the park');
+t.spawn();t.drain();assert.equal(t.visits.length,2,'Respawn must also enter park');
+console.log('PASS: start, pause/resume, chunk timeout, retry, placement failure, automatic build and player arrival');

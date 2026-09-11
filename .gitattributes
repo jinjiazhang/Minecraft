@@ -3,3 +3,4 @@
 *.service text eol=lf
 *.properties text eol=lf
 *.json text eol=lf
+addons/linnanmaki/assets/mesh/** -text whitespace=cr-at-eol

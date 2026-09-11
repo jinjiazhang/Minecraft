@@ -1,0 +1,15 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Linnanmäki · 2017 测绘底图样片",
+    "description": "500×500m · 1方块/米 · 室外扫描表面；游乐设施尚不可乘坐。City of Helsinki, CC BY 4.0",
+    "uuid": "ce5a572d-9517-446d-9d84-b395d24b0c97",
+    "version": [0,1,0],
+    "min_engine_version": [1,21,90]
+  },
+  "modules": [
+    {"type":"data","uuid":"c513bb5b-46b1-4b24-b677-470ba76e0876","version":[0,1,0]},
+    {"type":"script","language":"javascript","uuid":"83a84b9b-e4c1-4474-8542-ac66bc1195d8","version":[0,1,0],"entry":"scripts/main.js"}
+  ],
+  "dependencies":[{"module_name":"@minecraft/server","version":"2.1.0"}]
+}
