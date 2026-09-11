@@ -32,6 +32,12 @@ def main():
         stage=pathlib.Path(tempfile.mkdtemp(prefix='.official-reset-',dir=ROOT/'worlds'))
         try:
             fresh=extract(ROOT/'official-source/Helsinki3D_MC_bedrock.zip',stage)
+            # Optional installed gameplay packs survive a full official-world reset.
+            config=ROOT/'official-admin/game-packs.json'
+            if config.exists():
+                packs=json.loads(config.read_text())
+                for kind in ('behavior','resource'):
+                    (fresh/f'world_{kind}_packs.json').write_text(json.dumps(packs[kind]))
             subprocess.run(['chown','-R','minecraft:minecraft',str(fresh)],check=True)
             subprocess.run([str(ROOT/'cmd.sh'),'stop'],check=True,timeout=10)
             for _ in range(40):
@@ -46,7 +52,7 @@ def main():
                 subprocess.run(['systemctl','start','bedrock'],check=True)
                 for _ in range(45):
                     logs=subprocess.run(['journalctl','-u','bedrock','--since','@'+since,'-o','cat','--no-pager'],capture_output=True,text=True,check=True).stdout
-                    if 'HELSINKI_SPAWN_READY ' in logs:break
+                    if 'HELSINKI_SPAWN_READY ' in logs and (not config.exists() or 'DEADCITY_READY points=7' in logs):break
                     time.sleep(1)
                 else:raise RuntimeError('Restored world did not reach spawn readiness')
             except Exception:

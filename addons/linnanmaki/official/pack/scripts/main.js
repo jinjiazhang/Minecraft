@@ -1,9 +1,11 @@
 import {system,world,Player,CommandPermissionLevel,CustomCommandStatus} from '@minecraft/server';
+import {gameplayEnabled} from './gameplay.js';
 const x=-6940,z=-6585;
 let arrival,ready=false,resetPending=false;
 const confirmations=new Map();
 function enter(p){
   if(!p.isValid)return;
+  if(gameplayEnabled){p.runCommand('scriptevent dead:base');return;}
   if(!ready){system.runTimeout(()=>enter(p),20);return;}
   p.runCommand('gamemode creative');
   p.teleport(arrival,{dimension:world.getDimension('overworld')});
@@ -42,9 +44,9 @@ world.afterEvents.worldLoad.subscribe(()=>system.runTimeout(()=>{
       world.setDefaultSpawnLocation({x,y:arrival.y,z});
       ready=true;
       console.warn('HELSINKI_SPAWN_READY '+JSON.stringify({...arrival,surface:top.typeId}));
-      for(const p of world.getAllPlayers())enter(p);
+      if(!gameplayEnabled)for(const p of world.getAllPlayers())enter(p);
     }catch(e){if(++tries<20)system.runTimeout(prepare,20);else console.warn('HELSINKI_SPAWN_FAILED '+e);}
   }
   system.runTimeout(prepare,40);
 },20));
-world.afterEvents.playerSpawn.subscribe(e=>system.runTimeout(()=>enter(e.player),10));
+world.afterEvents.playerSpawn.subscribe(e=>system.runTimeout(()=>{if(!gameplayEnabled)enter(e.player);},10));

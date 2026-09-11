@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "末日赫尔辛基 · 视觉",
+    "description": "四类感染者，使用原版纹理",
+    "uuid": "35b4b949-a51c-4fa8-a6f3-bf43366f2875",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "c8768fa3-5b93-4726-b634-7c04d739c3bb",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -25,18 +25,25 @@ class Tests(unittest.TestCase):
     def test_log_auth_boundary(self):
         good='[2026-09-12 06:40:10:123 WARN] [Scripting] HELSINKI_RESET_REQUEST_V1'
         self.assertTrue(accepted(good))
+        self.assertTrue(accepted(list((good+'\n\r').encode())))
+        for bad in [None,{},['fake'],[999]]:self.assertFalse(accepted(bad))
         for bad in ['<player> '+good,good+' extra',good.replace('WARN','INFO'),'HELSINKI_RESET_REQUEST_V1']:
             self.assertFalse(accepted(bad))
-    def transaction(self,healthy):
+    def transaction(self,healthy,game=False):
         from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as tmp:
             root=pathlib.Path(tmp);old=root/'worlds/helsinki-official';old.mkdir(parents=True)
             (old/'player-change').write_text('keep on failure')
             (root/'server.properties').write_text('level-name=helsinki-official\n')
+            if game:
+                import json
+                (root/'official-admin').mkdir()
+                config={'behavior':PACK+[{'pack_id':'game','version':[1,0,0]}],'resource':[{'pack_id':'visual','version':[1,0,0]}]}
+                (root/'official-admin/game-packs.json').write_text(json.dumps(config))
             def fake_extract(archive,stage):
                 fresh=stage/'Helsinki_3D';fresh.mkdir();(fresh/'official').write_text('pristine');return fresh
             def run(args,**kwargs):
-                return SimpleNamespace(returncode=1 if 'is-active' in args else 0,stdout='HELSINKI_SPAWN_READY {}' if healthy else '')
+                return SimpleNamespace(returncode=1 if 'is-active' in args else 0,stdout='HELSINKI_SPAWN_READY {}\nDEADCITY_READY points=7' if healthy else '')
             with patch.object(reset_world,'ROOT',root),patch.object(reset_world,'extract',fake_extract),patch.object(reset_world.subprocess,'run',side_effect=run),patch.object(reset_world.time,'sleep'):
                 if healthy:reset_world.main()
                 else:
@@ -44,6 +51,9 @@ class Tests(unittest.TestCase):
             self.assertEqual((old/'official').exists(),healthy)
             self.assertEqual((old/'player-change').exists(),not healthy)
             self.assertFalse(list((root/'worlds').glob('.official-reset-*')))
+            if healthy and game:
+                for kind in ('behavior','resource'):self.assertEqual(json.loads((old/f'world_{kind}_packs.json').read_text()),config[kind])
     def test_successful_switch(self):self.transaction(True)
     def test_startup_failure_rolls_back(self):self.transaction(False)
+    def test_game_packs_survive_reset(self):self.transaction(True,True)
 if __name__=='__main__':unittest.main()

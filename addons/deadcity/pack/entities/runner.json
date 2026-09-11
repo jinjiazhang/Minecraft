@@ -1,0 +1,131 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "dead:runner",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "dead:calm": {
+        "minecraft:behavior.random_stroll": {
+          "priority": 6,
+          "speed_multiplier": 0.5
+        }
+      },
+      "dead:alert": {
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "must_see_forget_duration": 3,
+          "within_radius": 36,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_tag",
+                    "subject": "other",
+                    "value": "dead_active"
+                  }
+                ]
+              },
+              "max_dist": 36
+            }
+          ]
+        },
+        "minecraft:behavior.melee_attack": {
+          "priority": 3,
+          "speed_multiplier": 1,
+          "track_target": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "dead",
+          "monster",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 18,
+        "max": 18
+      },
+      "minecraft:movement": {
+        "value": 0.31
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": false,
+        "avoid_water": true,
+        "can_open_doors": false,
+        "can_pass_doors": true
+      },
+      "minecraft:jump.static": {},
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.8
+      },
+      "minecraft:attack": {
+        "damage": 3
+      },
+      "minecraft:scale": {
+        "value": 0.88
+      },
+      "minecraft:follow_range": {
+        "value": 40
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:nameable": {},
+      "minecraft:persistent": {}
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "dead:calm"
+          ]
+        }
+      },
+      "dead:alert": {
+        "remove": {
+          "component_groups": [
+            "dead:calm"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "dead:alert"
+          ]
+        }
+      },
+      "dead:calm": {
+        "remove": {
+          "component_groups": [
+            "dead:alert"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "dead:calm"
+          ]
+        }
+      }
+    }
+  }
+}

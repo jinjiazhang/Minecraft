@@ -1,0 +1,58 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "末日赫尔辛基 · 搜集与撤离",
+    "description": "Linnanmäki 基地 / 火力升级 / 尸群 / 潜行撤离",
+    "uuid": "67bd555b-4036-40bc-b0ac-d44c3dd5d197",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "e48ddc68-839b-496b-bb7b-535928a2134d",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "8a9b8f67-1a97-4f67-9d95-b8e21ea64b74",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.1.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    },
+    {
+      "uuid": "35b4b949-a51c-4fa8-a6f3-bf43366f2875",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

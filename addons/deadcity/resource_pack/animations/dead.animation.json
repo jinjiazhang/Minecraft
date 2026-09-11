@@ -1,0 +1,38 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.dead.walk": {
+      "loop": true,
+      "bones": {
+        "leftLeg": {
+          "rotation": [
+            "math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed * 80",
+            0,
+            0
+          ]
+        },
+        "rightLeg": {
+          "rotation": [
+            "-math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed * 80",
+            0,
+            0
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            -75,
+            0,
+            0
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            -75,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}
