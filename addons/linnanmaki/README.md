@@ -6,11 +6,17 @@
 
 ### 当前线上：官方 Helsinki3D+ 基岩版世界
 
+2026-09-12 更新：启用 `official/pack` 管理包，进服和重生进入 Linnanmäki 中心附近（X=-6940，Z=-6585），高度按实际地表自动确定，不铺平台、不修改官方建筑。管理员可用 `/lintsi:visit` 返回；`/lintsi:reset` 后由同一管理员在 30 秒内执行 `/lintsi:confirm`，恢复整份官方存档，清除所有玩家和建筑改动，服务器短暂断开后重新连接。
+
+重置源固定保存于 `/opt/bedrock/official-source/Helsinki3D_MC_bedrock.zip`，每次先校验 SHA-256 与 ZIP CRC、解压到独立目录，再正常停服并切换；启动和园区出生点就绪失败时恢复原活动目录。不创建持久备份。恢复后自动装入管理包，出生点和重置命令仍可用。旧的 `wipe-watch.service` 已禁用，改由 `helsinki-reset-watch.service` 接收精确的脚本日志请求，玩家聊天不能触发。安装入口 `official/install.sh`，需先上传 `official/` 到服务器 `/tmp/helsinki-official/admin`。
+
+坐标核验：按官方生成工具的旋转与中心偏移推导，Minecraft X=6668000−N+125，Z=25490000−E+125；与已有 2017 源网格的 3019 个有效地表点匹配，校正高度偏移 +11 米后高度残差中位数为 0 米（8 米采样，不能视作逐块精度承诺）。命令权限、同玩家确认、超时、重复请求、ZIP 校验、目录穿越及聊天伪造拒绝均有测试；尚未由真人客户端执行破坏性重置。
+
 2026-09-11 已按用户要求从官方服务器直接下载并切换到现成的全市基岩版地图。当前活动世界为 `/opt/bedrock/worlds/helsinki-official`，旧转换包已停用（日志 `Pack Stack - None`），不要求下载自定义资源包。没有额外复制备份旧存档；原 `world` 目录未作为活动世界加载。
 
 下载源：https://3d.hel.ninja/data/minecraft_Helsinki/Helsinki3D_MC_bedrock.zip 。ZIP 为 1,069,797,706 字节，CRC 检查通过；SHA-256 和 TLS 例外记录在 `assets/official-bedrock-source.json`。包内文件日期为 2021 年，不能把下载目录的 2025 年时间当作测绘年份。原始存档版本为 1.14，当前 BDS 1.26.45.1 已成功加载。
 
-保留官方出生点 `-5007,13,-6758`，尚未核实官方世界中的 Linnanmäki 坐标。出生点区块读入成功，脚下铁矿石与头部空气检查通过，公网 UDP 返回 Creative。尚未做真人客户端视觉验收。以下 0.2 / 0.1 是此前自制底图，当前不再部署。
+初次部署保留的官方出生点为 `-5007,13,-6758`，现已由上述管理包改为园区出生点。尚未做真人客户端视觉验收。以下 0.2 / 0.1 是此前自制底图，当前不再部署。
 
 复现部署：服务器创建 `/tmp/helsinki-official`，将官方 ZIP 下载为该目录的 `official.zip`；运行 `tools/prepare_official.py` 校验并解压，再以 root 运行 `deploy-official.sh`。默认应验证 HTTPS 证书；本次因官方证书过期，仅此公开下载使用 curl `-k`。部署脚本要求目标世界目录不存在，不会覆盖一个已安装的官方世界。大型官方存档不提交 Git，Git 保存来源、校验和部署流程。
 

@@ -1,0 +1,9 @@
+[Unit]
+Description=Restore official Helsinki world on administrator request
+After=bedrock.service
+[Service]
+ExecStart=/usr/bin/python3 -u /opt/bedrock/official-admin/watch_reset.py
+Restart=on-failure
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
