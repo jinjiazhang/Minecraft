@@ -123,7 +123,7 @@ def main():
         (pack/f'structures/lintsi/{name}.mcstructure').write_bytes(structure(list(blocks.shape),blocks))
         tiles.append({'id':'lintsi:'+name,'x':20000+cx*32,'y':low,'z':20000+cz*32,'sx':sx,'sz':sz})
     (pack/'scripts').mkdir(exist_ok=True)
-    (pack/'scripts/tiles.js').write_text('export const tiles = '+json.dumps(tiles)+';\n')
+    (pack/'scripts/tiles.js').write_text('export const tiles = '+json.dumps(tiles)+';\nexport const settings = '+json.dumps({'key':'lintsi:sample_tile','arrival':{'x':20200.5,'y':191,'z':20200.5}})+';\n')
     for p in (ROOT/'pack').rglob('*'):
         if p.is_file():
             dest=pack/p.relative_to(ROOT/'pack'); dest.parent.mkdir(parents=True,exist_ok=True); dest.write_bytes(p.read_bytes())

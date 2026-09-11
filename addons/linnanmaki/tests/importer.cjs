@@ -5,9 +5,9 @@ const path = require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../pack/scripts/main.js'),'utf8').replace(/^import .*;\r?\n/gm,'');
 function setup() {
   const commands={},jobs=new Map(),props=new Map(),placements=[],messages=[];
-  const events={}, visits=[];
+  const events={}, visits=[], consoleCommands=[];
   let counter=0,loaded=true,throwPlace=false;
-  const d={runCommand(){return {successCount:1};}, getBlock(){return loaded?{}:undefined;}};
+  const d={runCommand(command){consoleCommands.push(command);return {successCount:1};}, getBlock(){return loaded?{}:undefined;}};
   class Player {isValid=true; runCommand(){} teleport(p){visits.push(p);} setSpawnPoint(){} sendMessage(){}}
   const system={beforeEvents:{startup:{subscribe(fn){fn({customCommandRegistry:{registerCommand(spec,fn){commands[spec.name]=fn;}}});}}},run(fn){fn();},runTimeout(fn){jobs.set(++counter,fn);return counter;},clearRun(id){jobs.delete(id);}};
   const world={getDimension(){return d;},getDynamicProperty(k){return props.get(k);},setDynamicProperty(k,v){props.set(k,v);},sendMessage(m){messages.push(m);},structureManager:{place(id){if(throwPlace)throw Error('place failed');placements.push(id);}}};
@@ -15,11 +15,11 @@ function setup() {
   world.setDefaultSpawnLocation=()=>{};
   world.getAllPlayers=()=>[];
   system.afterEvents={scriptEventReceive:{subscribe(fn){events.script=fn;}}};
-  vm.runInNewContext(source,{system,world,Player,CommandPermissionLevel:{Admin:2},CustomCommandStatus:{Success:0,Failure:1},tiles:[{id:'a',x:20000,y:80,z:20000,sx:32,sz:32},{id:'b',x:20032,y:80,z:20000,sx:32,sz:32}]});
+  vm.runInNewContext(source,{system,world,Player,settings:{key:'lintsi:sample_tile',arrival:{x:20200.5,y:191,z:20200.5}},CommandPermissionLevel:{Admin:2},CustomCommandStatus:{Success:0,Failure:1},tiles:[{id:'a',x:20000,y:80,z:20000,sx:32,sz:32},{id:'b',x:20032,y:80,z:20000,sx:32,sz:32}]});
   const command=name=>commands['lintsi:'+name]({sourceEntity:new Player()});
   const step=()=>{const [id,fn]=jobs.entries().next().value; jobs.delete(id);fn();};
   const drain=()=>{let n=0;while(jobs.size){assert.ok(n++<100);step();}};
-  return {command,step,drain,placements,props,jobs,messages,visits,load:()=>events.load(),spawn:()=>events.spawn({player:new Player()}),setLoaded(v){loaded=v;},setFailure(v){throwPlace=v;}};
+  return {command,step,drain,placements,props,jobs,messages,visits,consoleCommands,load:()=>events.load(),spawn:()=>events.spawn({player:new Player()}),setLoaded(v){loaded=v;},setFailure(v){throwPlace=v;}};
 }
 let t=setup();
 assert.equal(t.jobs.size,0,'Registration must wait for world load');
@@ -34,4 +34,7 @@ t=setup();t.setFailure(true);t.command('build');t.drain();assert.equal(t.props.s
 t=setup();t.load();t.drain();assert.deepEqual(t.placements,['a','b'],'World load must build automatically');
 t.spawn();t.drain();assert.equal(t.visits[0].x,20200.5,'Player must enter the park');
 t.spawn();t.drain();assert.equal(t.visits.length,2,'Respawn must also enter park');
+t.load();t.drain();
+assert.ok(t.consoleCommands.includes('tickingarea add circle 20200 190 20200 1 lintsi_arrival_20200_20200 true'));
+assert.ok(!t.consoleCommands.includes('tickingarea remove lintsi_arrival_20200_20200'),'Restart must preserve the persistent arrival area to avoid asynchronous unload');
 console.log('PASS: start, pause/resume, chunk timeout, retry, placement failure, automatic build and player arrival');

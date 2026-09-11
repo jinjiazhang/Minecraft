@@ -1,12 +1,12 @@
 import { CommandPermissionLevel, CustomCommandStatus, Player, system, world } from '@minecraft/server';
-import { tiles } from './tiles.js';
+import { tiles, settings } from './tiles.js';
 
 let running = false;
 let timer;
 let activeArea;
-const key = 'lintsi:sample_tile';
+const key = settings.key;
 const dimension = () => world.getDimension('overworld');
-const arrival = {x:20200.5,y:191,z:20200.5};
+const arrival = settings.arrival;
 function log(message) { console.warn(`[LINNANMAKI] ${message}`); }
 function start() {
   if(running) return;
@@ -69,7 +69,7 @@ function next() {
 
 system.beforeEvents.startup.subscribe(event => {
   for (const [name, description, action] of [
-    ['build','在 X/Z=20000..20499 生成室外底图样片；请使用新建平坦测试世界',() => {
+    ['build','生成当前版本的室外底图；已完成区域会跳过',() => {
       world.sendMessage('开始生成 2017 测绘底图样片，约需数分钟。/lintsi:stop 可暂停。');
       start();
     }],
@@ -96,12 +96,15 @@ world.afterEvents.worldLoad.subscribe(() => {
     d.runCommand('time set noon');
     d.runCommand('weather clear');
     try {d.runCommand('tickingarea remove lintsi_arrival');} catch {}
-    d.runCommand('tickingarea add circle 20200 190 20200 1 lintsi_arrival true');
-    world.setDefaultSpawnLocation({x:20200,y:191,z:20200});
+    const x=Math.floor(arrival.x),z=Math.floor(arrival.z),y=Math.floor(arrival.y);
+    // Reuse the persistent region on restart. Removing and immediately adding
+    // the same name can asynchronously unload the replacement in BDS.
+    try {d.runCommand(`tickingarea add circle ${x} ${y-1} ${z} 1 lintsi_arrival_${x}_${z} true`);} catch {}
+    world.setDefaultSpawnLocation({x,y,z});
     let attempts=0;
     function prepare() {
       try {
-        d.runCommand('fill 20196 190 20196 20204 190 20204 glass');
+        d.runCommand(`fill ${x-4} ${y-1} ${z-4} ${x+4} ${y-1} ${z+4} glass`);
         log('ARRIVAL_READY');
         for(const p of world.getAllPlayers()) enter(p);
         start();

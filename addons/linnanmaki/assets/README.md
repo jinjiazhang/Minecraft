@@ -1,6 +1,6 @@
 # 地图源数据
 
-`mesh/` 保存本项目实际使用的四块 L16 OBJ、MTL、JPEG 和源 metadata.xml（共约 3.2 MB），让全新克隆可离线重建地图。
+`mesh/` 保存四块 L16 和 64 块 L18 OBJ、MTL、JPEG，以及源 metadata.xml（共约 23.4 MB），让全新克隆可离线重建两个版本的地图。
 
 来源：City of Helsinki, Helsinki 3D Mesh 2017。
 许可：Creative Commons Attribution 4.0（CC BY 4.0）。
@@ -12,4 +12,4 @@
 
 这里的模型及纹理字节未修改；选择性提取自官方 ZIP。`checksums.json` 记录本次获取的 SHA-256（不是发布方提供的签名）。`.gitattributes` 禁止 Git 改写这些文件的换行，以便跨电脑校验。
 
-构建过程裁剪到 500×500 米，将表面采样成 1 米方块，并把纹理近似映射至 16 种原版方块。输出不是官方产品或完整可玩乐园，详见上一级 README 和包内 ATTRIBUTION.txt。
+两个版本均裁剪到 500×500 米，世界距离保持 1:1。旧版采样成 1 米立方体并映射至 16 种原版方块；细节版使用半米子方块几何和 128 色自定义资源包。输出不是官方产品或完整可玩乐园，详见上一级 README 和包内 ATTRIBUTION.txt。
