@@ -14,7 +14,7 @@ test('top status label renders the title binding instead of leaving text empty',
   assert.equal(label.localize,false);
  }
  assert.equal(panel.anchor_from,'top_middle');
- assert.equal(panel.anchor_to,'top_middle');
+ assert.equal(panel.anchor_to,'top_middle');assert.ok(panel.controls.every(c=>Object.values(c).every(v=>v.type!=='image')),'status background must stay transparent');
 });
 test('behavior pack requests exactly the shipped HUD resource pack version',()=>{
  const bp=read('pack/manifest.json'),rp=read('resource_pack/manifest.json');
