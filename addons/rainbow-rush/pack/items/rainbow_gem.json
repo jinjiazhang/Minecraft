@@ -13,9 +13,10 @@
       },
       "minecraft:icon": {
         "textures": {
-          "default": "nether_star"
+          "default": "rush_rainbow_gem"
         }
       },
+      "minecraft:glint": true,
       "minecraft:max_stack_size": 1
     }
   }

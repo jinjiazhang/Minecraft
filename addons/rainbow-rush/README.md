@@ -74,3 +74,13 @@ ssh ubuntu@jinjiazh.com "sudo bash /tmp/rainbow-rush-release/deploy.sh"
 控制台检查：`scriptevent rush:smoke` 验证物品、矿物、入口标记及大厅地板；`scriptevent rush:extendcheck` 额外生成两段并检查完成。后者只接受无实体来源的控制台调用，会真实增加未开采矿层。
 
 没有实际Minecraft客户端或iPad自动化会话；场景审美、材质最终呈现、触屏位置和多人真实网络手感仍需客户端验收。UI保留原生触控布局，服务器不能强制改变设备上的触摸按钮位置。
+
+## 1.0.1 镐子与材质反馈
+
+所有自定义物品通过本包的 `textures/item_texture.json` 显式绑定图标，修复把贴图文件名误当成原版图集键的问题。六级镐子显示木、铁、钻石、金、下界合金镐图标，最高级增加附魔光泽。每次有效开采触发0.28秒有限挥镐动画，仍保留原生长按采矿、松开停止。
+
+十种材料分别配置敲击/挖碎音效和碎屑；硬矿没破时就有反馈，成功装入背包后才播放破碎效果。扩幅镐每次只播放一组主目标声音，各方块分别显示碎屑，避免声音叠加。表现异常不影响奖励逻辑，并在服务端记录 `RUSH_EFFECT_ERROR`。
+
+大厅通过 `rush:detailsVersion` 一次性更新半砖檐口、细栅栏支架、矮墙灯座、柜台边缘和吊灯。只改动 z<40 的装饰，不重建矿井或清空个人进度。半砖是半格高度，细柱和墙使用原版较窄模型；可采矿层仍是一米方块网格，没有实现半米独立开采单元。
+
+资源依据：[Mojang物品图集](https://github.com/Mojang/bedrock-samples/blob/main/resource_pack/textures/item_texture.json)、[原生音效定义](https://github.com/Mojang/bedrock-samples/blob/main/resource_pack/sounds/sound_definitions.json)、[玩家动画骨骼](https://github.com/Mojang/bedrock-samples/blob/main/resource_pack/animations/player.animation.json)、[官方粒子文档](https://learn.microsoft.com/en-us/minecraft/creator/documents/particleeffects?view=minecraft-bedrock-stable)。图标和碎屑直接复用原生贴图，无额外图片下载依赖。

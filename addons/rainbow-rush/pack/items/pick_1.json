@@ -13,9 +13,10 @@
       },
       "minecraft:icon": {
         "textures": {
-          "default": "iron_pickaxe"
+          "default": "rush_pick_1"
         }
       },
+      "minecraft:glint": false,
       "minecraft:max_stack_size": 1,
       "minecraft:hand_equipped": true,
       "minecraft:interact_button": "采矿",

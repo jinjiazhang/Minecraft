@@ -1,7 +1,8 @@
 import {world,system,ItemStack,ItemLockMode,GameMode,BlockPermutation,CommandPermissionLevel,CustomCommandStatus} from '@minecraft/server';
 import {ActionFormData} from '@minecraft/server-ui';
 import {HOME,MINE,ENTRANCES,MATERIALS,PICKS,newRound,inMine,segmentOf,cellIndex,entranceAir,materialAt,emptyBits,wasDug,markDug,encodeBits,decodeBits,newProfile,upgrade,claimWinner,signal,targets} from './rules.js';
-import {courtyard} from './scenery.js';
+import {courtyard,details} from './scenery.js';
+import {swing,miningEffect} from './effects.js';
 
 let round,ready=false,generating=false,failed=false,courtyardReady=false,requestedSegments=4,extensionProbe=0;
 const held=new Set(),busy=new Set(),votes=new Set(),returning=new Map(),feedback=new Map(),damage=new Map(),bitsCache=new Map(),dirtyBits=new Set(),nextHit=new Map(),perms=new Map();
@@ -11,6 +12,8 @@ const message=(p,t)=>p.sendMessage('§e'+t);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 const itemToMaterial=new Map(Object.entries(MATERIALS).map(([id,m])=>[m.item,id]));
 const blockToMaterial=new Map(Object.entries(MATERIALS).map(([id,m])=>[m.block,id]));
+const cosmeticErrors=new Set();
+function cosmetic(fn){try{fn();}catch(e){const key=String(e);if(!cosmeticErrors.has(key)){cosmeticErrors.add(key);console.warn('RUSH_EFFECT_ERROR '+key);}}}
 blockToMaterial.set('minecraft:flowing_water','water');blockToMaterial.set('minecraft:flowing_lava','lava');blockToMaterial.set('minecraft:obsidian','rock');blockToMaterial.set('minecraft:cobblestone','stone');
 function hint(p,t){feedback.set(p.id,{text:t,until:system.currentTick+45});p.onScreenDisplay.setActionBar(t);}
 function saveRound(){world.setDynamicProperty('rush:round',JSON.stringify(round));}
@@ -107,19 +110,20 @@ function mine(p){
  const hit=p.getBlockFromViewDirection({maxDistance:5,includeLiquidBlocks:true});if(!hit)return;
  if(inMine(hit.block.location)&&segmentOf(hit.block.location.z)>=round.generated){hint(p,'§b前方矿层正在生成，请稍候片刻。');return;}
  if(!inMine(hit.block.location)){hint(p,'§7请对准矿层。大厅、支护墙和边界不可挖。');return;}
- const candidates=targets(hit.block.location,p.getViewDirection(),p.location,PICKS[profile.tier].area);
+ const candidates=targets(hit.block.location,p.getViewDirection(),p.location,PICKS[profile.tier].area);let struck=false;
  for(const q of candidates){
   if(!inMine(q)||segmentOf(q.z)>=round.generated||distance(p.location,q)>6)continue;
   const b=dim().getBlock(q),kind=b&&blockToMaterial.get(b.typeId);if(!b||!kind)continue;
   const index=segmentOf(q.z),dug=bits(index),cell=cellIndex(q);if(wasDug(dug,cell)){if(b.isLiquid)b.setType('minecraft:air');continue;}
+  const audible=!struck;if(!struck){cosmetic(()=>swing(p));struck=true;}
   const key=`${q.x},${q.y},${q.z}`,m=MATERIALS[kind];let state=damage.get(key);if(!state||state.kind!==kind)state={kind,hp:m.hardness,tick:system.currentTick};
   state.hp-=PICKS[profile.tier].damage;state.tick=system.currentTick;damage.set(key,state);
-  if(state.hp>0){hint(p,`§b${m.name} §f${Math.ceil(state.hp)}/${m.hardness} · 价值 ${m.value}金币`);continue;}
+  if(state.hp>0){cosmetic(()=>miningEffect(p,kind,q,false,audible));hint(p,`§b${m.name} §f${Math.ceil(state.hp)}/${m.hardness} · 价值 ${m.value}金币`);continue;}
   // Inventory insertion must succeed before changing the block or claiming the win.
   const item=new ItemStack(m.item);item.keepOnDeath=true;const left=c.addItem(item);if(left){state.hp=1;held.delete(p.id);hint(p,'§e背包已满！使用回城器，到兑换机卖矿。');break;}
   markDug(dug,cell);dirtyBits.add(index);b.setType('minecraft:air');damage.delete(key);profile.mined++;
   hint(p,`§a+${m.name} · ${m.value.toLocaleString()}金币 · 已进入背包`);
-  try{p.playSound('dig.stone',{volume:.25,pitch:kind==='gem'?1.5:1});}catch{}
+  cosmetic(()=>miningEffect(p,kind,q,true,audible));
   if(kind==='rainbow'&&claimWinner(round,p.id,p.name)){
    profile.wins++;saveRound();flush();held.clear();world.sendMessage(`§d§l${p.name} 挖到了价值1,000,000金币的彩虹矿石，赢得本局！§r\n§e打开矿工指南，全员同意即可再来一局。`);
    for(const other of world.getAllPlayers())try{other.playSound('random.levelup',{volume:1,pitch:1.4});}catch{}break;
@@ -159,9 +163,9 @@ world.afterEvents.worldLoad.subscribe(()=>system.runTimeout(()=>{
   try{dim().runCommand('tickingarea remove rush_generation');}catch{}
   try{dim().runCommand('tickingarea add 0 180 0 79 205 39 rush_lobby true');}catch{}
   system.runTimeout(()=>{
-   const list=world.getDynamicProperty('rush:lobbyBuilt')?[]:courtyard();let i=0;
+   const list=[...(world.getDynamicProperty('rush:lobbyBuilt')?[]:courtyard()),...(world.getDynamicProperty('rush:detailsVersion')===1?[]:details())];let i=0;
    const job=system.runInterval(()=>{try{
-    for(let n=0;n<5&&i<list.length;n++,i++)dim().runCommand(list[i]);if(i<list.length)return;system.clearRun(job);world.setDynamicProperty('rush:lobbyBuilt',true);
+    for(let n=0;n<5&&i<list.length;n++,i++)dim().runCommand(list[i]);if(i<list.length)return;system.clearRun(job);world.setDynamicProperty('rush:lobbyBuilt',true);world.setDynamicProperty('rush:detailsVersion',1);
     for(const e of dim().getEntities({tags:['rush_marker']}))e.remove();
     for(const [name,x,z]of [['§6矿物兑换机 · 使用镐子/指南',12,17],['§b镐子升级机 · 使用镐子/指南',66,17],['§b一号矿口',24,30],['§6二号矿口',40,30],['§d三号矿口',56,30],['§d百万彩虹矿石 · 首个挖到者获胜',40,6]]){const e=dim().spawnEntity('minecraft:armor_stand',{x:Number(x)+.5,y:187,z:Number(z)+.5});e.nameTag=String(name);e.addTag('rush_marker');}
     courtyardReady=true;for(const p of world.getAllPlayers())lobby(p,true);if(round.generated>=4){ready=true;console.warn('RUSH_READY segments='+round.generated);}else grow();
@@ -172,5 +176,6 @@ world.afterEvents.worldLoad.subscribe(()=>system.runTimeout(()=>{
 system.afterEvents.scriptEventReceive.subscribe(e=>{if(e.sourceEntity)return;if(e.id==='rush:extendcheck'&&ready){extensionProbe=round.generated+2;requestedSegments=extensionProbe;grow();return;}if(e.id!=='rush:smoke')return;try{
  if(!ready||!round||round.generated<4)throw Error('not ready');for(const m of Object.values(MATERIALS)){BlockPermutation.resolve(m.block);new ItemStack(m.item);}for(let i=0;i<PICKS.length;i++)new ItemStack('rush:pick_'+i);
  if(dim().getEntities({tags:['rush_marker']}).length!==6)throw Error('lobby markers missing');if(dim().getBlock({x:40,y:186,z:9})?.typeId!=='minecraft:smooth_stone')throw Error('lobby floor missing');
+ if(world.getDynamicProperty('rush:detailsVersion')!==1||dim().getBlock({x:21,y:192,z:31})?.typeId!=='minecraft:dark_oak_slab')throw Error('scene details missing');
  console.warn('RUSH_SMOKE_PASS materials=10 picks=6 entrances=3 segments='+round.generated);
  }catch(err){console.warn('RUSH_SMOKE_FAIL '+err);}});

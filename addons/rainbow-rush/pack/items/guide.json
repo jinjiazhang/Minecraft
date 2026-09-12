@@ -13,9 +13,10 @@
       },
       "minecraft:icon": {
         "textures": {
-          "default": "book_normal"
+          "default": "rush_guide"
         }
       },
+      "minecraft:glint": false,
       "minecraft:max_stack_size": 1,
       "minecraft:hand_equipped": false,
       "minecraft:interact_button": "指南",

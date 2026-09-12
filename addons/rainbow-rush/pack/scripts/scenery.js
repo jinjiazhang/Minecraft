@@ -30,3 +30,31 @@ export function courtyard(){
  for(const x of [18,62]){f(x,196,34,x,201,34,'iron_chain');f(x,195,34,x,195,34,'lantern');}
  return q;
 }
+
+// Versioned lobby-only migration: half-height trim and quarter-width supports.
+// Native terrain still uses the one-metre Bedrock collision grid.
+export function details(){
+ const q=[],f=(x,y,z,a,b,c,block)=>q.push(`fill ${x} ${y} ${z} ${a} ${b} ${c} ${block}`);
+ for(const x of [24,40,56]){
+  f(x-3,192,31,x+3,192,31,'dark_oak_slab');
+  f(x-6,200,31,x+6,200,31,'stone_brick_slab');
+  f(x-7,202,31,x+7,202,39,'deepslate_tile_slab');
+  for(const xx of [x-4,x+4]){f(xx,187,31,xx,191,31,'dark_oak_fence');f(xx,192,31,xx,192,31,'lantern');}
+  for(const xx of [x-5,x+5]){f(xx,187,31,xx,188,31,'polished_blackstone_brick_wall');}
+  for(const z of [25,29])for(const xx of [x-2,x+2])f(xx,187,z,xx,187,z,'dark_oak_slab');
+ }
+ for(const x of [12,66]){
+  // Replace solid side walls with slender posts and a low railing.
+  for(const xx of [x-6,x+6]){
+   f(xx,187,8,xx,192,22,'air');f(xx,187,8,xx,187,22,'spruce_fence');
+   for(const z of [8,15,22])f(xx,187,z,xx,192,z,'spruce_fence');
+  }
+  f(x-6,193,8,x+6,193,22,'dark_oak_slab');
+  f(x-4,189,11,x+4,189,11,'polished_blackstone_slab');
+  for(const xx of [x-4,x+4]){f(xx,192,18,xx,192,18,'iron_chain');f(xx,191,18,xx,191,18,'lantern');}
+ }
+ // Half-height edges soften the podium without obstructing the spawn path.
+ f(36,187,6,44,187,6,'quartz_slab');
+ for(const x of [7,70])f(x,189,27,x+2,189,27,'oak_slab');
+ return q;
+}
