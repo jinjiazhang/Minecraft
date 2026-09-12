@@ -8,7 +8,8 @@ export function price(id){return CROPS[id]?.sell??GOODS[id]?.sell??0;}
 export function plant(s,key,id){const c=CROPS[id],p=s.plots[key];if(!p||p.crop||!c||c.season!==s.season||!(s.seeds[id]>0))return false;add(s.seeds,id,-1);p.crop=id;p.age=0;return true;}
 export function harvest(s,key){const p=s.plots[key],c=CROPS[p?.crop];if(!c||p.age<c.days)return false;add(s.bag,p.crop,c.yield||1);s.harvests++;s.xp.farming+=8;if(c.regrow)p.age=c.days-c.regrow;else{delete p.crop;p.age=0;}return true;}
 export function buySeeds(s,id,count=5){const c=CROPS[id];if(!c||c.season!==s.season||s.gold<c.seed*count||!Number.isInteger(count)||count<1)return false;s.gold-=c.seed*count;add(s.seeds,id,count);return true;}
-export function ship(s,id){if(!(s.bag[id]>0))return false;add(s.shipping,id,s.bag[id]);delete s.bag[id];return true;}
+export function ship(s,id,count=s.bag[id]){if(!Number.isInteger(count)||count<=0||!(s.bag[id]>=count))return false;add(s.shipping,id,count);add(s.bag,id,-count);return true;}
+export function withdraw(s,id,count=s.shipping[id]){if(!Number.isInteger(count)||count<=0||!(s.shipping[id]>=count))return false;add(s.shipping,id,-count);add(s.bag,id,count);return true;}
 export function nextDay(s,random=Math.random){
  let income=0;for(const [id,n]of Object.entries(s.shipping))income+=price(id)*n;s.gold+=income;s.shipping={};
  for(const p of Object.values(s.plots))if(p.crop&&p.water)p.age++;

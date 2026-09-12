@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fresh,plant,harvest,buySeeds,nextDay,ship,talk,gift,donate} from '../pack/scripts/rules.js';
+import {fresh,plant,harvest,buySeeds,nextDay,ship,withdraw,talk,gift,donate} from '../pack/scripts/rules.js';
 import {commands,isPlot} from '../pack/scripts/map.js';
 import {MinecraftBlockTypes} from '@minecraft/vanilla-data';
+test('partial shipping and withdrawal preserve quantities and reject stale requests',()=>{const s=fresh();s.bag.parsnip=8;assert.ok(ship(s,'parsnip',5));assert.equal(s.bag.parsnip,3);assert.equal(s.shipping.parsnip,5);assert.equal(ship(s,'parsnip',5),false);assert.equal(withdraw(s,'parsnip',6),false);assert.ok(withdraw(s,'parsnip',2));assert.equal(s.bag.parsnip,5);assert.equal(nextDay(s,()=>1),105);assert.equal(withdraw(s,'parsnip',1),false);assert.equal(ship(s,'parsnip',0),false);assert.equal(ship(s,'parsnip',-1),false);assert.equal(ship(s,'parsnip',1.5),false);});
 test('scene uses registered Bedrock block identifiers',()=>{const known=new Set(Object.values(MinecraftBlockTypes));for(const c of commands())assert.ok(known.has('minecraft:'+c.split(' ').at(-1)),c);});
 test('starter economy, four watered days, harvest and next-day shipping',()=>{const s=fresh();assert.equal(s.gold,500);s.plots['20,40']={age:0,water:true};assert.ok(plant(s,'20,40','parsnip'));assert.equal(s.seeds.parsnip,14);for(let i=0;i<3;i++){nextDay(s,()=>1);s.plots['20,40'].water=true;assert.equal(harvest(s,'20,40'),false);}nextDay(s,()=>1);assert.ok(harvest(s,'20,40'));assert.equal(s.bag.parsnip,1);assert.ok(ship(s,'parsnip'));assert.equal(s.gold,500);assert.equal(nextDay(s,()=>1),35);assert.equal(s.gold,535);assert.equal(nextDay(s,()=>1),0);});
 test('dry crops pause, rain waters, season rollover kills old crops',()=>{const s=fresh();s.plots.a={age:0,water:false,crop:'parsnip'};nextDay(s,()=>0);assert.equal(s.plots.a.age,0);assert.ok(s.plots.a.water);nextDay(s,()=>1);assert.equal(s.plots.a.age,1);s.day=28;nextDay(s,()=>1);assert.equal(s.season,1);assert.equal(s.day,1);assert.equal(s.plots.a.crop,undefined);});
