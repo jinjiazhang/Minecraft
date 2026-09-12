@@ -11,6 +11,18 @@ if systemctl is-active --quiet helsinki-reset-watch; then watcher_was_active=tru
 cp "$root/server.properties" "$src/previous-server.properties"
 cp "$root/world_behavior_packs.json" "$src/previous-behavior.json"
 cp "$root/world_resource_packs.json" "$src/previous-resource.json"
+had_pack=false
+had_resource=false
+if [[ -d "$root/behavior_packs/stardew" ]]; then
+  had_pack=true
+  mkdir -p "$src/previous-stardew-pack"
+  cp -r "$root/behavior_packs/stardew/." "$src/previous-stardew-pack/"
+fi
+if [[ -d "$root/resource_packs/stardew" ]]; then
+  had_resource=true
+  mkdir -p "$src/previous-stardew-resource"
+  cp -r "$root/resource_packs/stardew/." "$src/previous-stardew-resource/"
+fi
 "$root/cmd.sh" stop
 for i in {1..30}; do
   if ! systemctl is-active --quiet bedrock; then break; fi
@@ -61,6 +73,9 @@ if systemctl is-active --quiet bedrock; then exit 2; fi
 cp "$src/previous-server.properties" "$root/server.properties"
 cp "$src/previous-behavior.json" "$root/world_behavior_packs.json"
 cp "$src/previous-resource.json" "$root/world_resource_packs.json"
+if "$had_pack"; then cp -r "$src/previous-stardew-pack/." "$root/behavior_packs/stardew/"; fi
+if "$had_resource"; then cp -r "$src/previous-stardew-resource/." "$root/resource_packs/stardew/"; fi
+chown -R minecraft:minecraft "$root/behavior_packs/stardew" "$root/resource_packs/stardew"
 systemctl start bedrock
 if "$watcher_was_active"; then systemctl start helsinki-reset-watch; fi
 exit 1

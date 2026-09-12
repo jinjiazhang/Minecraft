@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import fs from 'node:fs';
 import * as rules from '../pack/scripts/rules.js';
+import * as mining from '../pack/scripts/mining.js';
 import * as map from '../pack/scripts/map.js';
 function runtime(){
  const props=new Map(),players=[],jobs=[],events={},commands=[];
@@ -10,9 +11,9 @@ function runtime(){
  const dim={id:'minecraft:overworld',getBlock:()=>({setType(){},setPermutation(){}}),runCommand:c=>commands.push(c),getEntities:()=>[]};
  const world={getDimension:()=>dim,getAllPlayers:()=>players,setDynamicProperty:(k,v)=>props.set(k,v),getDynamicProperty:k=>props.get(k),afterEvents:{itemStartUse:event('start'),itemStopUse:event('stop'),playerSpawn:event('spawn'),playerLeave:event('leave'),worldLoad:event('load')}};
  const system={currentTick:0,run:fn=>jobs.push(fn),runTimeout:fn=>jobs.push(fn),runInterval:()=>0,clearRun(){},beforeEvents:{startup:event('startup')},afterEvents:{scriptEventReceive:event('script')}};
- const ctx=vm.createContext({...rules,...map,world,system,console,BlockPermutation:{resolve:()=>({})},GameMode:{Adventure:'Adventure'},ItemLockMode:{inventory:'inventory'}});
+ const ctx=vm.createContext({...rules,...map,...mining,world,system,console,BlockPermutation:{resolve:()=>({})},GameMode:{Adventure:'Adventure'},ItemLockMode:{inventory:'inventory'}});
  const source=fs.readFileSync(new URL('../pack/scripts/main.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
- vm.runInContext(source+'\nglobalThis.api={cropHint,fishingTick,use,second,dawn,save,energy,spend,fishers,sleepers,checkSleep,get state(){return s},enable(){ready=true}};',ctx);ctx.api.enable();
+ vm.runInContext(source+'\nglobalThis.api={miningTick,enableMine(){mineReady=true;s.miningNodes=Object.fromEntries(NODES.map(n=>[n.key,{hp:ORES[n.ore].hp,regen:0}]))},cropHint,fishingTick,use,second,dawn,save,energy,spend,fishers,sleepers,checkSleep,get state(){return s},enable(){ready=true}};',ctx);ctx.api.enable();
  function player(id){const data=new Map();let target={location:{x:20,y:200,z:40},y:200,typeId:'minecraft:dirt'};const p={id,isValid:true,location:{x:32,y:201,z:24},dimension:dim,getDynamicProperty:k=>data.get(k),setDynamicProperty:(k,v)=>data.set(k,v),sendMessage(){},addEffect(){},teleport(q){p.location=q},onScreenDisplay:{lastTitle:'',lastAction:'',setTitle(text){this.lastTitle=text},setActionBar(text){this.lastAction=text}},getBlockFromViewDirection:()=>({block:target}),getComponent:()=>undefined,setTarget:b=>target=b};players.push(p);return p;}
  return {api:ctx.api,world,system,props,players,player,events};
 }
@@ -25,3 +26,6 @@ test('sleep cannot advance day with a stale vote outside the farmhouse',()=>{con
 test('casting respects held input and releasing during wait clears it',()=>{const r=runtime(),p=r.player('a');p.setTarget({location:{x:150,y:200,z:146},y:200,typeId:'minecraft:water'});r.api.use(p,'rod');assert.equal(r.api.fishers.get(p.id).hold,true);assert.equal(r.api.energy(p),262);r.events.stop({source:p});assert.equal(r.api.fishers.get(p.id).hold,false);});
 test('failed watering reports exhaustion rather than claiming the plot was watered',()=>{const r=runtime(),p=r.player('a');r.api.state.plots['20,40']={age:0,water:false};p.setDynamicProperty('valley:energy',0);r.api.use(p,'water');assert.match(r.api.cropHint(p),/体力不足/);assert.equal(r.api.state.plots['20,40'].water,false);});
 test('status uses top title channel while crop hints stay in action bar, including fishing',()=>{const r=runtime(),p=r.player('a');r.api.second();assert.match(p.onScreenDisplay.lastTitle,/春1日/);assert.match(p.onScreenDisplay.lastTitle,/体力 270/);assert.match(p.onScreenDisplay.lastTitle,/XYZ 32 201 24/);assert.doesNotMatch(p.onScreenDisplay.lastTitle,/\n/);assert.doesNotMatch(p.onScreenDisplay.lastAction,/XYZ/);assert.doesNotMatch(p.onScreenDisplay.lastAction,/体力|春1日/);p.onScreenDisplay.lastAction='钓鱼进度';r.api.fishers.set(p.id,{});p.setDynamicProperty('valley:energy',123);r.api.second();assert.match(p.onScreenDisplay.lastTitle,/体力 123/);assert.equal(p.onScreenDisplay.lastAction,'钓鱼进度');});
+
+test('holding pick breaks stone over four strikes, release prevents further mining',()=>{const r=runtime(),p=r.player('a'),n=mining.NODES[1];r.api.enableMine();p.location={x:142,y:171,z:38};let removed=false;p.setTarget({location:n,y:n.y,typeId:'minecraft:stone',setType(){removed=true}});p.getComponent=()=>({container:{getItem:()=>({typeId:'valley:pick'})}});r.api.use(p,'pick');for(let i=0;i<4;i++){r.system.currentTick=i*6;r.api.miningTick();}assert.ok(removed);assert.equal(r.api.energy(p),266);assert.equal(mining.miner(p.getDynamicProperty('valley:miner')).bag.stone,1);r.events.stop({source:p});r.system.currentTick+=6;r.api.miningTick();assert.equal(r.api.energy(p),266);});
+test('underground mine rooms do not trigger farm fall recovery',()=>{const r=runtime(),p=r.player('a');p.location={x:142,y:171,z:38};r.api.second();assert.equal(p.location.y,171);assert.match(p.onScreenDisplay.lastAction,/浅层矿道/);});
