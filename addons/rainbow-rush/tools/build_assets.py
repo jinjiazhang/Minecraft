@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-VERSION=[1,0,2]
+VERSION=[1,0,3]
 BP='33be1044-feb9-4e37-a46d-8c1311205ff8'
 RP='e903b1ed-8dba-4754-a898-118b189a07de'
 def write(p,d):
@@ -10,7 +10,7 @@ def write(p,d):
     p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 write(ROOT/'pack/manifest.json',{'format_version':2,'header':{'name':'彩虹矿井 · 百万竞赛','description':'连续矿层 / 三个入口 / 挖矿卖矿 / 镐子升级 / 彩虹矿石夺冠','uuid':BP,'version':VERSION,'min_engine_version':[1,26,30]},'modules':[{'type':'data','uuid':'ad3dfd92-3a23-47d7-9e97-116db87d2999','version':VERSION},{'type':'script','language':'javascript','uuid':'7f94af9b-e2f2-43a0-ad12-753731f0109c','version':VERSION,'entry':'scripts/main.js'}],'dependencies':[{'module_name':'@minecraft/server','version':'2.1.0'},{'module_name':'@minecraft/server-ui','version':'2.0.0'},{'uuid':RP,'version':VERSION}]})
 write(ROOT/'resource_pack/manifest.json',{'format_version':2,'header':{'name':'彩虹矿井 · 界面与矿石','description':'透明顶部状态栏 / 发光彩虹矿石','uuid':RP,'version':VERSION,'min_engine_version':[1,26,30]},'modules':[{'type':'resources','uuid':'afcf0110-12f2-4808-9a69-62e8dba23697','version':VERSION}]})
-tools=[('pick_'+str(i),name,'采矿',icon) for i,(name,icon) in enumerate([('矿工木镐','wood_pickaxe'),('精钢镐','iron_pickaxe'),('金刚镐','diamond_pickaxe'),('扩幅矿镐','gold_pickaxe'),('重型破岩镐','netherite_pickaxe'),('彩虹勘探镐','netherite_pickaxe')])]+[('guide','矿工指南','指南','book_normal'),('return','回城器 · 站定3秒','回城','compass_item')]
+tools=[('pick_'+str(i),name,'采矿',icon) for i,(name,icon) in enumerate([('矿工木镐','wood_pickaxe'),('精钢镐','iron_pickaxe'),('金刚镐','diamond_pickaxe'),('扩幅矿镐','gold_pickaxe'),('重型破岩镐','netherite_pickaxe'),('彩虹勘探镐','netherite_pickaxe')])]+[('siphon','矿用抽液器','收集液体','bucket_empty'),('guide','矿工指南','指南','book_normal'),('return','回城器 · 站定3秒','回城','compass_item')]
 atlas={}
 for id,name,button,icon in tools:
     atlas['rush_'+id]={'textures':'textures/items/'+icon}
@@ -20,7 +20,7 @@ for tier,power in enumerate([1,3,7,10,24,50]):
     path=ROOT/f'pack/items/pick_{tier}.json'
     item=json.loads(path.read_text(encoding='utf-8'))
     c=item['minecraft:item']['components']
-    c['minecraft:interact_button']='收集液体'
+    for key in ['minecraft:interact_button','minecraft:food','minecraft:use_modifiers','minecraft:use_animation']:c.pop(key,None)
     c['minecraft:digger']={'use_efficiency':False,'destroy_speeds':[{'block':block,'speed':speed*power} for block,speed in [('minecraft:dirt',3),('minecraft:stone',6),('minecraft:deepslate',2),('minecraft:oak_log',4),('minecraft:iron_block',2),('minecraft:gold_block',1),('minecraft:diamond_ore',1),('rush:rainbow_ore',10),('minecraft:obsidian',30),('minecraft:cobblestone',6)]]}
     write(path,item)
 atlas['rush_rainbow_gem']={'textures':'textures/items/nether_star'}

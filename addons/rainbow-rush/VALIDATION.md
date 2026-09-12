@@ -25,3 +25,10 @@
 - 2026-09-12服务器15:38:35：`RUSH_READY segments=6`、`RUSH_SMOKE_PASS materials=10 picks=6 entrances=3 segments=6`、部署返回`RUSH_DEPLOY_OK`。
 - 冒烟检查包含场景迁移版本及矿口半砖实物；服务active，NRestarts=0，内存306446336字节。原矿井数据库保留。
 - 未进行客户端渲染/声音实测，尤其第一人称/iPad挥镐幅度仍需实际客户端验收。服务器启动成功不代表客户端动画与粒子外观已验收。
+
+## 1.0.3 修复验证
+
+- 26项测试及TypeScript检查通过；测试要求六级镐子均无食用/持续使用组件，登录应用生存模式并补发抽液器，放置及桶使用被阻止，游戏指南仍可使用。
+- 2026-09-12服务器17:16:55：RUSH_READY segments=6，RUSH_SMOKE_PASS materials=10 picks=6 entrances=3 segments=6；部署返回RUSH_DEPLOY_OK。冒烟检查实际创建各级镐子并确认无food组件。
+- 实际server.properties：gamemode=survival、force-gamemode=true、default-player-permission-level=member、texturepack-required=true。
+- 前版客户端故障不能由旧有模拟测试排除。修复移除可食用镐子与冒险模式限制，但尚无实际iPad点击/长按成功的采集证据。

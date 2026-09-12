@@ -27,7 +27,7 @@ test('every tier has native digging speeds and stronger picks always mine each m
  let previous;
  for(let tier=0;tier<6;tier++){
   const c=read(`pack/items/pick_${tier}.json`)['minecraft:item'].components,d=c['minecraft:digger'].destroy_speeds;
-  assert.equal(c['minecraft:interact_button'],'收集液体');assert.ok(d.length>=8);
+  for(const key of ['minecraft:interact_button','minecraft:food','minecraft:use_modifiers','minecraft:use_animation'])assert.equal(c[key],undefined);assert.ok(d.length>=8);
   for(const entry of d){assert.ok(entry.speed>0);if(previous)assert.ok(entry.speed>previous.find(p=>p.block===entry.block).speed);}
   previous=d;
  }

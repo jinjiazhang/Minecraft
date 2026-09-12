@@ -42,7 +42,7 @@ for base in [r,w]:
     (base/'world_behavior_packs.json').write_text(json.dumps([{'pack_id':h['uuid'],'version':h['version']}]))
     (base/'world_resource_packs.json').write_text(json.dumps([{'pack_id':rp['uuid'],'version':rp['version']}]))
 p=r/'server.properties';lines=p.read_text().splitlines()
-updates={'level-name':'rainbow-rush','gamemode':'adventure','force-gamemode':'true','difficulty':'normal','texturepack-required':'true','level-type':'FLAT','level-seed':'20260913','view-distance':'6','tick-distance':'4'}
+updates={'level-name':'rainbow-rush','gamemode':'survival','force-gamemode':'true','difficulty':'normal','texturepack-required':'true','level-type':'FLAT','level-seed':'20260913','view-distance':'6','tick-distance':'4'}
 for i,line in enumerate(lines):
     key=line.split('=',1)[0]
     if key in updates:lines[i]=key+'='+updates.pop(key)

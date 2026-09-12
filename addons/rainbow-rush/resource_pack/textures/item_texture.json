@@ -20,6 +20,9 @@
     "rush_pick_5": {
       "textures": "textures/items/netherite_pickaxe"
     },
+    "rush_siphon": {
+      "textures": "textures/items/bucket_empty"
+    },
     "rush_guide": {
       "textures": "textures/items/book_normal"
     },

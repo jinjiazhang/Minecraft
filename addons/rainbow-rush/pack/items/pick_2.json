@@ -19,17 +19,6 @@
       "minecraft:glint": false,
       "minecraft:max_stack_size": 1,
       "minecraft:hand_equipped": true,
-      "minecraft:interact_button": "收集液体",
-      "minecraft:use_modifiers": {
-        "use_duration": 3600,
-        "movement_modifier": 1
-      },
-      "minecraft:food": {
-        "nutrition": 0,
-        "saturation_modifier": 0,
-        "can_always_eat": true
-      },
-      "minecraft:use_animation": "none",
       "minecraft:digger": {
         "use_efficiency": false,
         "destroy_speeds": [
