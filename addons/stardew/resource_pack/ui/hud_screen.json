@@ -21,6 +21,8 @@
       {
         "valley_status_label": {
           "type": "label",
+          "text": "#text",
+          "localize": false,
           "size": ["100% - 16px", 26],
           "font_type": "default",
           "font_size": "normal",
