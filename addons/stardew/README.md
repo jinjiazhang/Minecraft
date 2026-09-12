@@ -29,7 +29,7 @@ npm ci
 npm run check
 npm test
 python tools/build_assets.py
-scp -r pack deploy.sh ubuntu@jinjiazh.com:/tmp/stardew-release/
+scp -r pack resource_pack deploy.sh ubuntu@jinjiazh.com:/tmp/stardew-release/
 ssh ubuntu@jinjiazh.com "sudo bash /tmp/stardew-release/deploy.sh"
 ```
 
@@ -52,3 +52,7 @@ ssh ubuntu@jinjiazh.com "sudo bash /tmp/stardew-release/deploy.sh"
 ## 1.0.1 操作细节
 
 农地准星提示显示作物、浇水状态与剩余浇水日；农具操作有短时结果提示。日记和物品菜单使用原生物品图标。出货支持1个、5个或全部，过夜前可按数量取回；跨日和多人数量变化会重新检查。钓鱼遵循实际按住/松开状态，打开日记取消垂钓。离开农舍的旧睡眠票不再触发过夜；满体力时不再扣款购买沙拉。此更新不改变客户端触摸按钮的位置和尺寸。
+
+## 1.0.2 顶部状态栏
+
+新增必需资源包，将title显示区改为顶部居中的双行小字状态栏，留出顶部触摸按钮空间。每秒刷新日期、天气、资金和个人体力；底部actionbar保留作物与钓鱼提示。此世界将title通道用于状态栏，其他标题需要单独设计。重连时接受服务器资源包后生效；不是通过空行或中央大标题模拟顶部。

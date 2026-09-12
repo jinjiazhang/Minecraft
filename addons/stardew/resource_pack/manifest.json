@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "星露谷 · 顶部状态栏",
+    "description": "日期、天气、金币与体力置顶",
+    "uuid": "c8997e3a-4678-4b66-8c39-448c45ce6170",
+    "version": [
+      1,
+      0,
+      2
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "4ef39d5a-d88e-49c2-b2a6-bb05db5998c2",
+      "version": [
+        1,
+        0,
+        2
+      ]
+    }
+  ]
+}

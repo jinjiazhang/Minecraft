@@ -7,7 +7,7 @@
     "version": [
       1,
       0,
-      1
+      2
     ],
     "min_engine_version": [
       1,
@@ -22,7 +22,7 @@
       "version": [
         1,
         0,
-        1
+        2
       ]
     },
     {
@@ -32,7 +32,7 @@
       "version": [
         1,
         0,
-        1
+        2
       ],
       "entry": "scripts/main.js"
     }
@@ -45,6 +45,14 @@
     {
       "module_name": "@minecraft/server-ui",
       "version": "2.0.0"
+    },
+    {
+      "uuid": "c8997e3a-4678-4b66-8c39-448c45ce6170",
+      "version": [
+        1,
+        0,
+        2
+      ]
     }
   ]
 }

@@ -1,0 +1,41 @@
+{
+  "namespace": "hud",
+  "hud_title_text": {
+    "type": "panel",
+    "anchor_from": "top_middle",
+    "anchor_to": "top_middle",
+    "offset": [0, 36],
+    "size": ["100%", 30],
+    "layer": 10,
+    "alpha": "@hud.anim_title_text_alpha_in",
+    "propagate_alpha": true,
+    "controls": [
+      {
+        "valley_status_background": {
+          "type": "image",
+          "texture": "textures/ui/hud_tip_text_background",
+          "size": [260, 30],
+          "alpha": 0.65
+        }
+      },
+      {
+        "valley_status_label": {
+          "type": "label",
+          "size": ["100% - 16px", 26],
+          "font_type": "default",
+          "font_size": "normal",
+          "text_alignment": "center",
+          "shadow": true,
+          "layer": 1,
+          "bindings": [
+            {
+              "binding_name": "#hud_title_text_string",
+              "binding_name_override": "#text",
+              "binding_type": "global"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
