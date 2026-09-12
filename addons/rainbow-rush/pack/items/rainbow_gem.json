@@ -1,0 +1,22 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "rush:rainbow_gem",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "§d彩虹矿石 · 价值1,000,000金币"
+      },
+      "minecraft:icon": {
+        "textures": {
+          "default": "nether_star"
+        }
+      },
+      "minecraft:max_stack_size": 1
+    }
+  }
+}

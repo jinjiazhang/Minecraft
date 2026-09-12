@@ -1,0 +1,65 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:block": {
+    "description": {
+      "identifier": "rush:rainbow_ore",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:display_name": "彩虹矿石",
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "rush_purple",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        },
+        "up": {
+          "texture": "rush_red",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        },
+        "down": {
+          "texture": "rush_orange",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        },
+        "north": {
+          "texture": "rush_yellow",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        },
+        "south": {
+          "texture": "rush_lime",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        },
+        "east": {
+          "texture": "rush_light_blue",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        },
+        "west": {
+          "texture": "rush_purple",
+          "render_method": "opaque",
+          "ambient_occlusion": 0,
+          "face_dimming": false
+        }
+      },
+      "minecraft:light_emission": 15,
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 100
+      },
+      "minecraft:destructible_by_explosion": false,
+      "minecraft:map_color": "#dc64ee"
+    }
+  }
+}

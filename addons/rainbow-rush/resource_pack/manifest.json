@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "彩虹矿井 · 界面与矿石",
+    "description": "透明顶部状态栏 / 发光彩虹矿石",
+    "uuid": "e903b1ed-8dba-4754-a898-118b189a07de",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "afcf0110-12f2-4808-9a69-62e8dba23697",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

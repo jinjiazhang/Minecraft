@@ -1,0 +1,58 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "彩虹矿井 · 百万竞赛",
+    "description": "连续矿层 / 三个入口 / 挖矿卖矿 / 镐子升级 / 彩虹矿石夺冠",
+    "uuid": "33be1044-feb9-4e37-a46d-8c1311205ff8",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "ad3dfd92-3a23-47d7-9e97-116db87d2999",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "7f94af9b-e2f2-43a0-ad12-753731f0109c",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.1.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    },
+    {
+      "uuid": "e903b1ed-8dba-4754-a898-118b189a07de",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"name":"rainbow-rush","private":true,"type":"module","scripts":{"check":"tsc -p tsconfig.json","test":"node --test tests/*.test.js"},"devDependencies":{"@minecraft/server":"2.1.0","@minecraft/server-ui":"2.0.0","@minecraft/vanilla-data":"1.26.44","typescript":"5.8.3"}}
