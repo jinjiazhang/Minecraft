@@ -7,7 +7,7 @@
 谁先真正挖碎本局唯一的彩虹矿石，谁立即获胜。彩虹矿石可在机器兑换 **1,000,000金币**；胜利不要求先出售，不按累计存款判定。其他材料不能通过攒够100万触发胜利。
 
 1. 出生在矿井大厅，获得木镐、矿工指南和回城器。大厅三条带不同颜色的入口汇入同一座矿井。
-2. 电脑按住右键；触屏按住原生「采矿」按钮。每0.3秒敲击一次，松开停止。平挖会形成两格高通道，减少反复抬头低头。
+2. 电脑对准方块按住左键；iPad 使用原生长按方块/挖掘键（随触控方案变化）。显示原生挥镐和裂纹进度，松开停止。高阶镐会扩挖相邻方块；邻块较硬时需要继续开采。水和岩浆使用「收集液体」按钮，电脑用右键。
 3. 矿物直接进入原生Minecraft背包；背包满时矿物不会被破坏或丢失。死亡保留材料。回城器需要站定3秒，移动或挖矿取消。
 4. 大厅左侧黄色兑换机把背包中的矿物换成个人金币；右侧蓝色机器购买下一等级的镐子。可对机器使用镐子、交互方块或打开指南。
 5. 更强的镐子挖得更快；扩幅镐开始一次挖三格宽。深处矿层更硬，也包含更值钱的矿物。
@@ -84,3 +84,11 @@ ssh ubuntu@jinjiazh.com "sudo bash /tmp/rainbow-rush-release/deploy.sh"
 大厅通过 `rush:detailsVersion` 一次性更新半砖檐口、细栅栏支架、矮墙灯座、柜台边缘和吊灯。只改动 z<40 的装饰，不重建矿井或清空个人进度。半砖是半格高度，细柱和墙使用原版较窄模型；可采矿层仍是一米方块网格，没有实现半米独立开采单元。
 
 资源依据：[Mojang物品图集](https://github.com/Mojang/bedrock-samples/blob/main/resource_pack/textures/item_texture.json)、[原生音效定义](https://github.com/Mojang/bedrock-samples/blob/main/resource_pack/sounds/sound_definitions.json)、[玩家动画骨骼](https://github.com/Mojang/bedrock-samples/blob/main/resource_pack/animations/player.animation.json)、[官方粒子文档](https://learn.microsoft.com/en-us/minecraft/creator/documents/particleeffects?view=minecraft-bedrock-stable)。图标和碎屑直接复用原生贴图，无额外图片下载依赖。
+
+## 1.0.2 原生挖掘交互
+
+镐子增加原生 digger 组件和 Adventure 模式允许挖掘名单，仍维持冒险模式保护大厅与禁止放置方块。固体矿层不再由物品使用事件循环开采；原生破坏完成事件被取消后，在下一 tick 检查原方块坐标、类型、世界轮次、距离和当前镐子，再执行背包奖励与扩挖。不会把玩家随后瞄准的新方块误当作完成目标，也不会产生可重复领取的原生掉落物。背包满时保留原矿。
+
+直接目标的挖掘时间现在由原版材料与 digger 速度倍率共同决定，不再按旧版每0.3秒扣硬度计时。表中硬度仍用于相邻块扩挖和液体收集预算。更换目标/松开时按原版规则处理裂纹进度；挥镐与敲击由原版驱动，采集完成仍有自定义碎屑和声音。
+
+参考：[官方 digger 组件](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_digger?view=minecraft-bedrock-stable)。没有 Minecraft/iPad 客户端实测，触控手感与裂纹渲染仍需客户端验收。

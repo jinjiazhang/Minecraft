@@ -28,7 +28,7 @@ function data(p){
 function kit(p){
  const d=data(p),c=inventory(p);if(!c)return;
  let pickSlot=-1;for(let i=0;i<c.size;i++)if(c.getItem(i)?.typeId.startsWith('rush:pick_')){if(pickSlot<0)pickSlot=i;c.setItem(i,undefined);}
- const pick=new ItemStack('rush:pick_'+d.tier);pick.keepOnDeath=true;pick.lockMode=ItemLockMode.inventory;pick.setLore(['按住采矿 · 松开停止',`力量 ${PICKS[d.tier].damage} · 通道宽度 ${PICKS[d.tier].area}`]);
+ const pick=new ItemStack('rush:pick_'+d.tier);pick.keepOnDeath=true;pick.lockMode=ItemLockMode.inventory;pick.setCanDestroy([...blockToMaterial.keys()].filter(id=>!id.includes('water')&&!id.includes('lava')));pick.setLore(['对准方块长按挖掘 · 松开停止',`力量 ${PICKS[d.tier].damage} · 通道宽度 ${PICKS[d.tier].area}`]);
  if(pickSlot>=0)c.setItem(pickSlot,pick);else c.addItem(pick);
  for(let i=0;i<c.size;i++)if(c.getItem(i)?.typeId==='rush:pick_'+d.tier){if(i<9)p.selectedSlotIndex=i;else{const slot=p.selectedSlotIndex,old=c.getItem(slot);c.setItem(slot,c.getItem(i));c.setItem(i,old);}break;}
  for(const id of ['guide','return']){let has=false;for(let i=0;i<c.size;i++)if(c.getItem(i)?.typeId==='rush:'+id)has=true;if(!has){const item=new ItemStack('rush:'+id);item.keepOnDeath=true;item.lockMode=ItemLockMode.inventory;c.addItem(item);}}
@@ -36,7 +36,7 @@ function kit(p){
 function lobby(p,explain=false){
  if(!p.isValid)return;held.delete(p.id);returning.delete(p.id);p.setGameMode(GameMode.Adventure);p.teleport(HOME,{dimension:dim()});p.setSpawnPoint({...HOME,dimension:dim()});
  if(round)kit(p);p.removeEffect('slowness');p.addEffect('resistance',60,{amplifier:4,showParticles:false});
- if(explain)message(p,'彩虹矿井竞赛：选一条入口，按住镐子挖矿 → 左侧机器卖矿 → 右侧购买更好的镐子。第一个挖到彩虹矿石的人获胜！使用回城器可返回大厅。');
+ if(explain)message(p,'彩虹矿井竞赛：选一条入口，对准方块长按挖掘 → 左侧机器卖矿 → 右侧购买更好的镐子。第一个挖到彩虹矿石的人获胜！使用回城器可返回大厅。');
 }
 function atMachine(p,kind){return p.dimension.id==='minecraft:overworld'&&distance(p.location,{x:kind==='sell'?12:66,y:187,z:17})<10;}
 function bagSummary(p){const c=inventory(p),counts={};if(c)for(let i=0;i<c.size;i++){const item=c.getItem(i),id=item&&itemToMaterial.get(item.typeId);if(id)counts[id]=(counts[id]||0)+item.amount;}return counts;}
@@ -53,7 +53,7 @@ function guide(p){
  if(atMachine(p,'sell'))buttons.unshift(['使用矿石兑换机',()=>later(()=>exchange(p)),'textures/items/gold_ingot']);
  if(atMachine(p,'shop'))buttons.unshift(['使用镐子升级机',()=>later(()=>shop(p)),'textures/items/diamond_pickaxe']);
  if(round.winner)buttons.push([`再来一局 · 在线玩家全员同意 (${votes.size}/${world.getAllPlayers().length})`,()=>vote(p)]);
- form(p,'彩虹矿井 · 百万竞赛',`${round.winner?'本局冠军：'+round.winner.name:'目标：先挖到价值1,000,000金币的彩虹矿石'}\n\n你的金币 ${d.coins} · ${PICKS[d.tier].name} · 本局挖掘 ${d.mined}块\n背包矿物回收价值 ${bagValue(bag)}金币\n\n① 大厅三条入口通往同一矿井。\n② 对准矿层按住采矿，松开停止；平挖自动形成两格高通道。\n③ 左侧黄色机器兑换矿物，右侧蓝色机器升级镐子。\n④ 稀有矿位于深处，留意顶部彩虹信号。\n\n水会流动，岩浆会灼伤。矿物直接进入Minecraft背包；死亡保留材料。金币与装备各自独立。`,buttons);
+ form(p,'彩虹矿井 · 百万竞赛',`${round.winner?'本局冠军：'+round.winner.name:'目标：先挖到价值1,000,000金币的彩虹矿石'}\n\n你的金币 ${d.coins} · ${PICKS[d.tier].name} · 本局挖掘 ${d.mined}块\n背包矿物回收价值 ${bagValue(bag)}金币\n\n① 大厅三条入口通往同一矿井。\n② 对准矿层长按挖掘（电脑左键），松开停止；平挖自动形成两格高通道。\n③ 左侧黄色机器兑换矿物，右侧蓝色机器升级镐子。\n④ 稀有矿位于深处，留意顶部彩虹信号。\n\n水会流动，岩浆会灼伤。矿物直接进入Minecraft背包；死亡保留材料。金币与装备各自独立。`,buttons);
 }
 function prices(p){form(p,'材料 · 硬度 / 单价',Object.values(MATERIALS).map(m=>`${m.name}：硬度 ${m.hardness} · ${m.value.toLocaleString()}金币`).join('\n')+'\n\n高阶镐子伤害更高，扩幅镐可同时开采三格宽通道。',['返回指南'].map(t=>[t,()=>later(()=>guide(p))]));}
 function exchange(p){
@@ -104,20 +104,22 @@ function grow(){
  },80);
 }
 function fail(e){failed=true;generating=false;console.warn('RUSH_BUILD_ERROR '+e);world.sendMessage('§c矿井生成遇到问题，请暂时留在大厅。');}
-function mine(p){
+function mine(p,nativeTarget=null){
  if(!ready||round.winner){hint(p,round?.winner?'§d比赛结束！打开指南可以投票再来一局。':'§e矿井准备中……');return;}
  returning.delete(p.id);const c=inventory(p);if(!c)return;const profile=data(p),selected=c.getItem(p.selectedSlotIndex)?.typeId;if(selected!=='rush:pick_'+profile.tier){held.delete(p.id);return;}
- const hit=p.getBlockFromViewDirection({maxDistance:5,includeLiquidBlocks:true});if(!hit)return;
+ const hit=nativeTarget?{block:dim().getBlock(nativeTarget)}:p.getBlockFromViewDirection({maxDistance:5,includeLiquidBlocks:true});if(!hit?.block)return;
  if(inMine(hit.block.location)&&segmentOf(hit.block.location.z)>=round.generated){hint(p,'§b前方矿层正在生成，请稍候片刻。');return;}
  if(!inMine(hit.block.location)){hint(p,'§7请对准矿层。大厅、支护墙和边界不可挖。');return;}
+ const nativeWork=nativeTarget?(MATERIALS[blockToMaterial.get(hit.block.typeId)]?.hardness||0):0,liquidOnly=!nativeTarget&&hit.block.isLiquid;
  const candidates=targets(hit.block.location,p.getViewDirection(),p.location,PICKS[profile.tier].area);let struck=false;
  for(const q of candidates){
   if(!inMine(q)||segmentOf(q.z)>=round.generated||distance(p.location,q)>6)continue;
   const b=dim().getBlock(q),kind=b&&blockToMaterial.get(b.typeId);if(!b||!kind)continue;
+  if(liquidOnly&&kind!=='water'&&kind!=='lava')continue;
   const index=segmentOf(q.z),dug=bits(index),cell=cellIndex(q);if(wasDug(dug,cell)){if(b.isLiquid)b.setType('minecraft:air');continue;}
-  const audible=!struck;if(!struck){cosmetic(()=>swing(p));struck=true;}
+  const audible=!struck;if(!struck){if(!nativeTarget)cosmetic(()=>swing(p));struck=true;}
   const key=`${q.x},${q.y},${q.z}`,m=MATERIALS[kind];let state=damage.get(key);if(!state||state.kind!==kind)state={kind,hp:m.hardness,tick:system.currentTick};
-  state.hp-=PICKS[profile.tier].damage;state.tick=system.currentTick;damage.set(key,state);
+  state.hp-=nativeTarget?nativeWork:PICKS[profile.tier].damage;state.tick=system.currentTick;damage.set(key,state);
   if(state.hp>0){cosmetic(()=>miningEffect(p,kind,q,false,audible));hint(p,`§b${m.name} §f${Math.ceil(state.hp)}/${m.hardness} · 价值 ${m.value}金币`);continue;}
   // Inventory insertion must succeed before changing the block or claiming the win.
   const item=new ItemStack(m.item);item.keepOnDeath=true;const left=c.addItem(item);if(left){state.hp=1;held.delete(p.id);hint(p,'§e背包已满！使用回城器，到兑换机卖矿。');break;}
@@ -133,7 +135,7 @@ function mine(p){
 }
 function interact(p,id){
  if(!round)return;if(id==='rush:guide'){guide(p);return;}if(id==='rush:return'){recall(p);return;}
- if(id.startsWith('rush:pick_')){if(atMachine(p,'sell')){exchange(p);return;}if(atMachine(p,'shop')){shop(p);return;}held.add(p.id);returning.delete(p.id);mine(p);nextHit.set(p.id,system.currentTick+6);}
+ if(id.startsWith('rush:pick_')){if(atMachine(p,'sell')){exchange(p);return;}if(atMachine(p,'shop')){shop(p);return;}const hit=p.getBlockFromViewDirection({maxDistance:5,includeLiquidBlocks:true});if(!hit?.block.isLiquid){hint(p,'§f对准方块直接长按挖掘；收集液体仅用于水和岩浆。');return;}held.add(p.id);returning.delete(p.id);mine(p);nextHit.set(p.id,system.currentTick+6);}
 }
 function second(){
  if(!round)return;const players=world.getAllPlayers();for(const p of players){
@@ -142,16 +144,22 @@ function second(){
   if(!ready&&inMine(p.location)){lobby(p);continue;}
   const d=data(p),ret=returning.get(p.id);if(ret){if(distance(p.location,ret.start)>.7){returning.delete(p.id);hint(p,'§e移动取消了回城。');}else if(system.currentTick>=ret.until){lobby(p);message(p,'已返回大厅，左侧卖矿、右侧升级。');}}
   p.onScreenDisplay.setTitle(`§e${d.coins}金币 §f| ${PICKS[d.tier].name} | 深度${Math.max(0,Math.floor(p.location.z-40))}m | 彩虹信号${signal(p.location,round.rainbow)} §f| XYZ ${Math.floor(p.location.x)} ${Math.floor(p.location.y)} ${Math.floor(p.location.z)}`,{fadeInDuration:0,stayDuration:60,fadeOutDuration:0});
-  const tip=feedback.get(p.id);if(!tip||tip.until<system.currentTick)p.onScreenDisplay.setActionBar(round.winner?'§d冠军 '+round.winner.name+' · 矿工指南：再来一局':!ready?'§b矿井准备中……':inMine(p.location)?'§f按住采矿 · 回城器返回大厅 · 先挖到彩虹矿石获胜':'§e左侧兑换矿物 ← 选择入口开始挖矿 → 右侧升级镐子');
+  const tip=feedback.get(p.id);if(!tip||tip.until<system.currentTick)p.onScreenDisplay.setActionBar(round.winner?'§d冠军 '+round.winner.name+' · 矿工指南：再来一局':!ready?'§b矿井准备中……':inMine(p.location)?'§f长按方块挖掘 · 回城器返回大厅 · 先挖到彩虹矿石获胜':'§e左侧兑换矿物 ← 选择入口开始挖矿 → 右侧升级镐子');
  }
  grow();if(extensionProbe&&round.generated>=extensionProbe&&!generating){const q={x:20,y:180,z:40+(extensionProbe-1)*16+5};if(dim().getBlock(q)){console.warn('RUSH_EXTENSION_PASS segments='+round.generated);extensionProbe=0;requestedSegments=4;}}flush();for(const [k,d]of damage)if(system.currentTick-d.tick>600)damage.delete(k);
  // Unloaded segments are retained on disk, not held forever in script memory.
  if(bitsCache.size>24)for(const key of bitsCache.keys())if(!dirtyBits.has(key)&&Math.abs(key-round.generated)>8&&!players.some(p=>Math.abs(segmentOf(p.location.z)-key)<3))bitsCache.delete(key);
 }
-system.runInterval(()=>{for(const p of world.getAllPlayers())if(held.has(p.id)&&system.currentTick>=(nextHit.get(p.id)||0)){nextHit.set(p.id,system.currentTick+6);try{mine(p);}catch(e){held.delete(p.id);console.warn('RUSH_MINE_ERROR '+e);}}},2);
+system.runInterval(()=>{for(const p of world.getAllPlayers())if(held.has(p.id)&&system.currentTick>=(nextHit.get(p.id)||0)){nextHit.set(p.id,system.currentTick+6);try{const hit=p.getBlockFromViewDirection({maxDistance:5,includeLiquidBlocks:true});if(hit?.block.isLiquid)mine(p);else held.delete(p.id);}catch(e){held.delete(p.id);console.warn('RUSH_MINE_ERROR '+e);}}},2);
 system.runInterval(second,20);
 world.afterEvents.itemStartUse.subscribe(e=>{if(e.itemStack.typeId.startsWith('rush:'))interact(e.source,e.itemStack.typeId);});
 world.afterEvents.itemStopUse.subscribe(e=>held.delete(e.source.id));
+// Cancel native removal so inventory capacity, area protection and the unique winner stay authoritative.
+world.beforeEvents.playerBreakBlock.subscribe(e=>{
+ e.cancel=true;const p=e.player,q={...e.block.location},id=e.block.typeId,tool=e.itemStack?.typeId,epoch=round?.id;
+ if(!ready||!inMine(q)||!tool?.startsWith('rush:pick_'))return;
+ system.run(()=>{if(!p.isValid||round?.id!==epoch||inventory(p)?.getItem(p.selectedSlotIndex)?.typeId!==tool||dim().getBlock(q)?.typeId!==id||p.dimension.id!==dim().id||distance(p.location,q)>6)return;mine(p,q);});
+});
 world.beforeEvents.playerInteractWithBlock.subscribe(e=>{if(atMachine(e.player,'sell')||atMachine(e.player,'shop')){e.cancel=true;const p=e.player;system.run(()=>atMachine(p,'sell')?exchange(p):shop(p));}});
 world.afterEvents.playerSpawn.subscribe(e=>system.runTimeout(()=>lobby(e.player,true),40));
 world.afterEvents.playerLeave.subscribe(e=>{held.delete(e.playerId);busy.delete(e.playerId);returning.delete(e.playerId);feedback.delete(e.playerId);nextHit.delete(e.playerId);votes.delete(e.playerId);});
@@ -174,7 +182,7 @@ world.afterEvents.worldLoad.subscribe(()=>system.runTimeout(()=>{
  }catch(e){fail(e);}
 },60));
 system.afterEvents.scriptEventReceive.subscribe(e=>{if(e.sourceEntity)return;if(e.id==='rush:extendcheck'&&ready){extensionProbe=round.generated+2;requestedSegments=extensionProbe;grow();return;}if(e.id!=='rush:smoke')return;try{
- if(!ready||!round||round.generated<4)throw Error('not ready');for(const m of Object.values(MATERIALS)){BlockPermutation.resolve(m.block);new ItemStack(m.item);}for(let i=0;i<PICKS.length;i++)new ItemStack('rush:pick_'+i);
+ if(!ready||!round||round.generated<4)throw Error('not ready');for(const m of Object.values(MATERIALS)){BlockPermutation.resolve(m.block);new ItemStack(m.item);}for(let i=0;i<PICKS.length;i++){const pick=new ItemStack('rush:pick_'+i);pick.setCanDestroy([...blockToMaterial.keys()].filter(id=>!id.includes('water')&&!id.includes('lava')));if(!pick.getCanDestroy().some(id=>id.split(':').pop()==='rainbow_ore'))throw Error('native mining permission missing: '+JSON.stringify(pick.getCanDestroy()));}
  if(dim().getEntities({tags:['rush_marker']}).length!==6)throw Error('lobby markers missing');if(dim().getBlock({x:40,y:186,z:9})?.typeId!=='minecraft:smooth_stone')throw Error('lobby floor missing');
  if(world.getDynamicProperty('rush:detailsVersion')!==1||dim().getBlock({x:21,y:192,z:31})?.typeId!=='minecraft:dark_oak_slab')throw Error('scene details missing');
  console.warn('RUSH_SMOKE_PASS materials=10 picks=6 entrances=3 segments='+round.generated);

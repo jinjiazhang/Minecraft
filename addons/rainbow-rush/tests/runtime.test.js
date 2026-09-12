@@ -7,11 +7,11 @@ import {courtyard,details} from '../pack/scripts/scenery.js';
 import {swing,miningEffect,MINING_EFFECTS} from '../pack/scripts/effects.js';
 function harness(){
  const properties=new Map(),players=[],blocks=new Map(),events={};let currentRound=rules.newRound(1,77);currentRound.generated=32;
- class ItemStack{constructor(id,n=1){this.typeId=id;this.amount=n;}setLore(){}}
+ class ItemStack{constructor(id,n=1){this.typeId=id;this.amount=n;}setLore(){}setCanDestroy(){}}
  class Form{title(){return this}body(){return this}button(){return this}async show(){return {canceled:false,selection:0}}}
  const event=n=>({subscribe:fn=>events[n]=fn});
  const dim={id:'minecraft:overworld',getBlock:q=>{const k=`${q.x},${q.y},${q.z}`;if(!blocks.has(k))blocks.set(k,{location:q,typeId:rules.MATERIALS[rules.materialAt(q,currentRound)].block,isLiquid:false,setType(id){this.typeId=id;},setPermutation(p){this.typeId=p.typeId;}});return blocks.get(k)},getEntities:()=>[],runCommand(){}};
- const world={getDimension:()=>dim,getAllPlayers:()=>players,getDynamicProperty:k=>properties.get(k),setDynamicProperty:(k,v)=>properties.set(k,v),sendMessage(){},afterEvents:{itemStartUse:event('start'),itemStopUse:event('stop'),playerSpawn:event('spawn'),playerLeave:event('leave'),worldLoad:event('load')},beforeEvents:{playerInteractWithBlock:event('block')}};
+ const world={getDimension:()=>dim,getAllPlayers:()=>players,getDynamicProperty:k=>properties.get(k),setDynamicProperty:(k,v)=>properties.set(k,v),sendMessage(){},afterEvents:{itemStartUse:event('start'),itemStopUse:event('stop'),playerSpawn:event('spawn'),playerLeave:event('leave'),worldLoad:event('load')},beforeEvents:{playerInteractWithBlock:event('block'),playerBreakBlock:event('break')}};
  const system={currentTick:0,run:fn=>fn(),runTimeout(){},runInterval(){return 1},clearRun(){},beforeEvents:{startup:event('startup')},afterEvents:{scriptEventReceive:event('script')}};
  const ctx=vm.createContext({...rules,courtyard,details,swing,miningEffect,world,system,ItemStack,ActionFormData:Form,ItemLockMode:{inventory:'inventory'},GameMode:{Adventure:'adventure'},BlockPermutation:{resolve:id=>({typeId:id})},console});
  const source=fs.readFileSync(new URL('../pack/scripts/main.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
@@ -51,4 +51,29 @@ test('each material produces its own collection particles and the configured sou
 
 test('protected scenery and exhausted cells have no swing or mining reward effects',()=>{
  const h=harness(),a=h.player('Alice',{x:40,y:186,z:9});h.api.mine(a.p);assert.equal(a.p.animations.length,0);assert.equal(a.p.sounds.length,0);
+});
+
+test('native break uses the event block instead of a later ray target and never creates native drops',()=>{
+ const h=harness(),q={x:30,y:188,z:60},a=h.player('Alice',q);h.dim.getBlock(q).setType('minecraft:gold_block');
+ a.p.getBlockFromViewDirection=()=>undefined;
+ const e={cancel:false,player:a.p,block:h.dim.getBlock(q),itemStack:a.slots[0]};h.events.break(e);
+ assert.equal(e.cancel,true);assert.equal(h.dim.getBlock(q).typeId,'minecraft:air');assert.equal(a.slots.filter(i=>i?.typeId==='minecraft:gold_block').length,1);
+ assert.equal(a.p.animations.length,0,'native hand animation must not be doubled');
+});
+
+test('native break preserves full-bag minerals and cannot break courtyard blocks',()=>{
+ const h=harness(),q={x:30,y:188,z:60},a=h.player('Alice',q);h.dim.getBlock(q).setType('minecraft:gold_block');
+ for(let i=1;i<36;i++)a.slots[i]={typeId:'minecraft:apple',amount:64};
+ h.events.break({player:a.p,block:h.dim.getBlock(q),itemStack:a.slots[0]});assert.equal(h.dim.getBlock(q).typeId,'minecraft:gold_block');
+ const lobby={x:40,y:188,z:10};h.dim.getBlock(lobby).setType('minecraft:gold_block');
+ const e={cancel:false,player:a.p,block:h.dim.getBlock(lobby),itemStack:a.slots[0]};h.events.break(e);assert.equal(e.cancel,true);assert.equal(h.dim.getBlock(lobby).typeId,'minecraft:gold_block');
+});
+
+test('using the pick on solid blocks does not start automatic mining; liquids cannot harvest nearby solids',()=>{
+ const h=harness(),q={x:30,y:188,z:60},a=h.player('Alice',q);h.dim.getBlock(q).setType('minecraft:stone');h.events.start({source:a.p,itemStack:a.slots[0]});
+ assert.equal(h.api.held.has(a.p.id),false);assert.equal(h.dim.getBlock(q).typeId,'minecraft:stone');
+ h.dim.getBlock(q).setType('minecraft:water');h.dim.getBlock(q).isLiquid=true;
+ const near={...q,x:31};h.dim.getBlock(near).setType('minecraft:gold_block');
+ h.events.start({source:a.p,itemStack:a.slots[0]});assert.equal(h.dim.getBlock(q).typeId,'minecraft:air');assert.equal(h.dim.getBlock(near).typeId,'minecraft:gold_block');
+ h.events.stop({source:a.p});assert.equal(h.api.held.has(a.p.id),false);
 });

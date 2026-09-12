@@ -23,3 +23,12 @@ test('detail migration stays outside mining cells and uses real fine-profile blo
  for(const command of details()){const t=command.split(' ');assert.ok(Number(t[3])>=0&&Number(t[6])<40,command);assert.ok(ids.has('minecraft:'+t[7]),command);if(t[7].endsWith('_slab'))slabs++;}
  assert.ok(slabs>=10);
 });
+test('every tier has native digging speeds and stronger picks always mine each material faster',()=>{
+ let previous;
+ for(let tier=0;tier<6;tier++){
+  const c=read(`pack/items/pick_${tier}.json`)['minecraft:item'].components,d=c['minecraft:digger'].destroy_speeds;
+  assert.equal(c['minecraft:interact_button'],'收集液体');assert.ok(d.length>=8);
+  for(const entry of d){assert.ok(entry.speed>0);if(previous)assert.ok(entry.speed>previous.find(p=>p.block===entry.block).speed);}
+  previous=d;
+ }
+});

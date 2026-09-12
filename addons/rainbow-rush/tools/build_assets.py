@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-VERSION=[1,0,1]
+VERSION=[1,0,2]
 BP='33be1044-feb9-4e37-a46d-8c1311205ff8'
 RP='e903b1ed-8dba-4754-a898-118b189a07de'
 def write(p,d):
@@ -15,6 +15,14 @@ atlas={}
 for id,name,button,icon in tools:
     atlas['rush_'+id]={'textures':'textures/items/'+icon}
     write(ROOT/f'pack/items/{id}.json',{'format_version':'1.26.30','minecraft:item':{'description':{'identifier':'rush:'+id,'menu_category':{'category':'equipment'}},'components':{'minecraft:display_name':{'value':name},'minecraft:icon':{'textures':{'default':'rush_'+id}},'minecraft:glint':id=='pick_5','minecraft:max_stack_size':1,'minecraft:hand_equipped':id.startswith('pick_'),'minecraft:interact_button':button,'minecraft:use_modifiers':{'use_duration':3600,'movement_modifier':1},'minecraft:food':{'nutrition':0,'saturation_modifier':0,'can_always_eat':True},'minecraft:use_animation':'none'}}})
+# Native attack/hold-to-break. Digger multipliers preserve material and tier differences.
+for tier,power in enumerate([1,3,7,10,24,50]):
+    path=ROOT/f'pack/items/pick_{tier}.json'
+    item=json.loads(path.read_text(encoding='utf-8'))
+    c=item['minecraft:item']['components']
+    c['minecraft:interact_button']='收集液体'
+    c['minecraft:digger']={'use_efficiency':False,'destroy_speeds':[{'block':block,'speed':speed*power} for block,speed in [('minecraft:dirt',3),('minecraft:stone',6),('minecraft:deepslate',2),('minecraft:oak_log',4),('minecraft:iron_block',2),('minecraft:gold_block',1),('minecraft:diamond_ore',1),('rush:rainbow_ore',10),('minecraft:obsidian',30),('minecraft:cobblestone',6)]]}
+    write(path,item)
 atlas['rush_rainbow_gem']={'textures':'textures/items/nether_star'}
 write(ROOT/'resource_pack/textures/item_texture.json',{'resource_pack_name':'rainbow_rush','texture_name':'atlas.items','texture_data':atlas})
 write(ROOT/'pack/items/rainbow_gem.json',{'format_version':'1.26.30','minecraft:item':{'description':{'identifier':'rush:rainbow_gem','menu_category':{'category':'items'}},'components':{'minecraft:display_name':{'value':'§d彩虹矿石 · 价值1,000,000金币'},'minecraft:icon':{'textures':{'default':'rush_rainbow_gem'}},'minecraft:glint':True,'minecraft:max_stack_size':1}}})

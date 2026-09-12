@@ -19,7 +19,7 @@
       "minecraft:glint": false,
       "minecraft:max_stack_size": 1,
       "minecraft:hand_equipped": true,
-      "minecraft:interact_button": "采矿",
+      "minecraft:interact_button": "收集液体",
       "minecraft:use_modifiers": {
         "use_duration": 3600,
         "movement_modifier": 1
@@ -29,7 +29,52 @@
         "saturation_modifier": 0,
         "can_always_eat": true
       },
-      "minecraft:use_animation": "none"
+      "minecraft:use_animation": "none",
+      "minecraft:digger": {
+        "use_efficiency": false,
+        "destroy_speeds": [
+          {
+            "block": "minecraft:dirt",
+            "speed": 21
+          },
+          {
+            "block": "minecraft:stone",
+            "speed": 42
+          },
+          {
+            "block": "minecraft:deepslate",
+            "speed": 14
+          },
+          {
+            "block": "minecraft:oak_log",
+            "speed": 28
+          },
+          {
+            "block": "minecraft:iron_block",
+            "speed": 14
+          },
+          {
+            "block": "minecraft:gold_block",
+            "speed": 7
+          },
+          {
+            "block": "minecraft:diamond_ore",
+            "speed": 7
+          },
+          {
+            "block": "rush:rainbow_ore",
+            "speed": 70
+          },
+          {
+            "block": "minecraft:obsidian",
+            "speed": 210
+          },
+          {
+            "block": "minecraft:cobblestone",
+            "speed": 42
+          }
+        ]
+      }
     }
   }
 }
