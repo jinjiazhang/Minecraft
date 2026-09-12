@@ -1,0 +1,50 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "星露谷 · 农场与鹈鹕镇",
+    "description": "标准农场、季节种植、钓鱼、出货与小镇生活",
+    "uuid": "bb57d576-3f63-485f-8ed6-d38614103473",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "b65d37bc-a20a-4c10-b5a0-9c0328607dba",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "c4a2dc27-1416-49bd-b036-dca89e11e2cb",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.1.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    }
+  ]
+}

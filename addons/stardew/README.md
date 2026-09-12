@@ -1,0 +1,50 @@
+# 星露谷 · Minecraft 基岩版农场
+
+独立世界 `stardew-farm`，Minecraft Bedrock 1.26.45.1，Script API 2.1.0 / UI 2.0.0。保留原有 `helsinki-official` 世界；两个玩法包不同时激活。
+
+## 已实现
+
+- 192×160 方块原创搭建场景：西侧农场，东侧鹈鹕镇，北侧木匠店和矿洞，南侧森林、海滩；10座可进入建筑、道路、桥梁、码头、池塘、树林及动物院。出生点 `(32.5,201,27.5)`。
+- 8种农具，支持原生触屏动作按钮；`/valley:menu` 打开日记。对准土地使用锄头、种子、浇水壶、收获篮。日记切换种子；农具需点按一次、松开后再使用。
+- 初始500g、15包防风草种子、270体力；7种作物的季节、价格、成熟天数与部分重复收获规则；每天浇水、雨天自动浇水、跨季枯萎。
+- 每季28天，6:00至次日2:00，现实7秒推进10游戏分钟；无人在线暂停。全员在农舍就寝推进一天，2点昏倒扣费。
+- 共同资金、农场背包、作物与建筑进度；每人独立体力。出货箱隔夜结算，皮埃尔营业时间与周三休息；餐吧恢复体力。
+- 按住抬杆、松开下降的钓鱼小游戏，海水/淡水产物；采矿、采集材料，鸡舍、畜棚、饲料与次日产物。
+- 8名具名村民，交谈、礼物、好感度；晚间移动到餐吧附近；春季作物收集包和入门奖励。
+- 世界进度分片保存，15秒内脏数据落入动态属性，每次过夜立即保存；关闭服务器须使用原生 stop。
+
+## 与原版差异（不要标注为完整复刻）
+
+地图是按区域关系重新设计的方块场景，未使用原版地图文件、贴图、人物立绘或音乐，不是逐格1:1。建筑使用Minecraft原生材质，作物模型以胡萝卜、土豆、甜菜代替；村民使用原生村民模型。
+
+采矿目前是共享层数和材料产出的简化交互，没有120个独立洞层、怪物战斗或装备升级；鱼只有两类。养殖即时建设、统一喂食与产物背包结算；无动物成长和亲密度。送礼每天一次、偏好与日程简化；未实现全部NPC、婚姻、节日、完整事件、Joja路线、完整社区修复、烹饪/加工机和原版完整技能树。场景目前在Y200的平台上构建，外围树墙限制活动范围。
+
+这是一版可运行的核心玩法实现，不能称为原版完整移植。尚未通过实际Minecraft客户端/iPad画面与操作验收。
+
+## 开发和部署
+
+```powershell
+cd addons/stardew
+npm ci
+npm run check
+npm test
+python tools/build_assets.py
+scp -r pack deploy.sh ubuntu@jinjiazh.com:/tmp/stardew-release/
+ssh ubuntu@jinjiazh.com "sudo bash /tmp/stardew-release/deploy.sh"
+```
+
+首次上传前创建 `/tmp/stardew-release`。部署脚本平滑停服、复制行为包、切换独立世界，校验 `VALLEY_READY` 和 `VALLEY_SMOKE_PASS`。失败恢复先前服务器配置和根目录包绑定，并切回原世界。成功后停用仅面向赫尔辛基的重置监听器。旧世界和包留在服务器。
+
+再次更新只更新脚本，`valley:built` 避免覆盖玩家场景；地图生成器变化不会自动重建既有场景，后续布局修改应提供迁移代码。当前农场未开放清档命令；赫尔辛基 `/lintsi:reset` 在本世界不可用。
+
+`pack/scripts/rules.js` 为可测试经济与日期逻辑，`map.js` 为场景生成器，`main.js` 为服务器交互。`tools/build_assets.py` 生成原生触屏物品定义。
+
+## 参考
+
+- [原版介绍](https://www.stardewvalley.net/about/)
+- [作物数据](https://wiki.stardewvalley.net/Crops)
+- [日期和作息](https://wiki.stardewvalley.net/Day_Cycle)
+- [体力](https://wiki.stardewvalley.net/Energy)
+- [皮埃尔商店](https://wiki.stardewvalley.net/Pierre%27s_General_Store)
+
+具体简化机制以本仓库实现为准。

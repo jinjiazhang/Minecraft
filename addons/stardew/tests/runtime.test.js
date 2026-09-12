@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import fs from 'node:fs';
+import * as rules from '../pack/scripts/rules.js';
+import * as map from '../pack/scripts/map.js';
+function runtime(){
+ const props=new Map(),players=[],jobs=[],events={},commands=[];
+ const event=name=>({subscribe:fn=>events[name]=fn});
+ const dim={id:'minecraft:overworld',getBlock:()=>({setType(){},setPermutation(){}}),runCommand:c=>commands.push(c),getEntities:()=>[]};
+ const world={getDimension:()=>dim,getAllPlayers:()=>players,setDynamicProperty:(k,v)=>props.set(k,v),getDynamicProperty:k=>props.get(k),afterEvents:{itemStartUse:event('start'),itemStopUse:event('stop'),playerSpawn:event('spawn'),playerLeave:event('leave'),worldLoad:event('load')}};
+ const system={currentTick:0,run:fn=>jobs.push(fn),runTimeout:fn=>jobs.push(fn),runInterval:()=>0,clearRun(){},beforeEvents:{startup:event('startup')},afterEvents:{scriptEventReceive:event('script')}};
+ const ctx=vm.createContext({...rules,...map,world,system,console,BlockPermutation:{resolve:()=>({})},GameMode:{Adventure:'Adventure'},ItemLockMode:{inventory:'inventory'}});
+ const source=fs.readFileSync(new URL('../pack/scripts/main.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
+ vm.runInContext(source+'\nglobalThis.api={use,second,dawn,save,energy,spend,fishers,sleepers,checkSleep,get state(){return s},enable(){ready=true}};',ctx);ctx.api.enable();
+ function player(id){const data=new Map();let target={location:{x:20,y:200,z:40},y:200,typeId:'minecraft:dirt'};const p={id,isValid:true,location:{x:32,y:201,z:24},dimension:dim,getDynamicProperty:k=>data.get(k),setDynamicProperty:(k,v)=>data.set(k,v),sendMessage(){},addEffect(){},teleport(q){p.location=q},onScreenDisplay:{setActionBar(){}},getBlockFromViewDirection:()=>({block:target}),getComponent:()=>undefined,setTarget:b=>target=b};players.push(p);return p;}
+ return {api:ctx.api,world,system,props,players,player,events};
+}
+test('touch tools complete farm actions, consume energy and prevent repeated seed use',()=>{const r=runtime(),p=r.player('a');r.api.use(p,'hoe');assert.equal(r.api.energy(p),268);r.system.currentTick+=5;r.api.use(p,'seeds');assert.equal(r.api.state.seeds.parsnip,14);r.system.currentTick+=5;r.api.use(p,'seeds');assert.equal(r.api.state.seeds.parsnip,14);r.system.currentTick+=5;r.api.use(p,'water');assert.equal(r.api.energy(p),266);assert.equal(r.api.state.plots['20,40'].water,true);});
+test('sleep requires all players and settles shipping once',()=>{const r=runtime(),a=r.player('a'),b=r.player('b');r.api.state.shipping.parsnip=2;r.api.sleepers.add(a.id);r.api.checkSleep();assert.equal(r.api.state.day,1);r.api.sleepers.add(b.id);r.api.checkSleep();assert.equal(r.api.state.day,2);assert.equal(r.api.state.gold,570);r.api.checkSleep();assert.equal(r.api.state.day,2);assert.equal(r.api.energy(a),270);});
+test('clock pauses when empty and persistence chunks support full farm',()=>{const r=runtime();for(let i=0;i<14;i++)r.api.second();assert.equal(r.api.state.minute,360);for(let i=0;i<1020;i++)r.api.state.plots[String(i)]={age:4,water:true,crop:'parsnip'};r.api.save();const n=r.props.get('valley:chunks');assert.ok(n>1);let text='';for(let i=0;i<n;i++){const part=r.props.get('valley:state_'+i);assert.ok(Buffer.byteLength(part,'utf8')<32768);text+=part;}assert.equal(Object.keys(JSON.parse(text).plots).length,1020);});
+test('tool use cancels sleep and fish release clears held input',()=>{const r=runtime(),p=r.player('a');r.api.sleepers.add(p.id);r.api.use(p,'hoe');assert.equal(r.api.sleepers.has(p.id),false);const fish={hold:true};r.api.fishers.set(p.id,fish);r.events.stop({source:p});assert.equal(fish.hold,false);});
